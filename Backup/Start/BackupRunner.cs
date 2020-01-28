@@ -158,6 +158,10 @@ namespace Backup.Start
                     //Logger.LogInfo("Gelöschte Datei: {0}", shouldBeSrcFile);
                     ConsoleWriter.WriteWithColor("Gelöschte Datei '{0}' ...", ConsoleColor.White, shouldBeSrcFile);
                     
+                    // Dateiattribute auf "normal" setzen, damit die Datei gelöscht werden kann
+                    // => z.B. sind einige git-Dateien read-only, weshalb man sie sonst nicht löschen kann
+                    File.SetAttributes(destFile, FileAttributes.Normal);
+                    
                     // Datei löschen
                     File.Delete(destFile);
                     
@@ -184,7 +188,8 @@ namespace Backup.Start
                     ConsoleWriter.WriteWithColor("Gelöschtes Verzeichnis '{0}' ...", ConsoleColor.White, shouldBeSrcDir);
                     
                     // Verzeichnis rekursiv löschen
-                    Directory.Delete(destSubDir, true);
+                    // => eigene Methode, da ggf. Datei-Attribute geändert werden müssen
+                    DeleteDirectoryRecursively(destSubDir);
                     
                     // Ergebnis-Flag aktualisieren
                     if (!atLeastOneDeleted)
@@ -196,6 +201,34 @@ namespace Backup.Start
             
             // Ergebnis-Flag zurückgeben
             return atLeastOneDeleted;
+        }
+
+        private static void DeleteDirectoryRecursively(string destDir)
+        {
+            // Verzeichnis-Attribute auf "normal" setzen, damit das Verzeichnis am Ende der Methode
+            // gelöscht werden kann
+            DirectoryInfo directoryInfo = new DirectoryInfo(destDir)
+            {
+                Attributes = FileAttributes.Normal
+            };
+            
+            // Dateiattribute jeder Datei auf "normal" setzen, damit die Datei gelöscht werden kann, und
+            // anschließend die Datei löschen
+            // => z.B. sind einige git-Dateien read-only, weshalb man sie sonst nicht löschen kann
+            foreach (string file in Directory.GetFiles(destDir))
+            {
+                File.SetAttributes(file, FileAttributes.Normal);
+                File.Delete(file);
+            }
+            
+            // in jedem Sub-Verzeichnis wiederholen
+            foreach (string subDir in Directory.GetDirectories(destDir))
+            {
+                DeleteDirectoryRecursively(subDir);
+            }
+            
+            // Verzeichnis selbst löschen
+            directoryInfo.Delete();
         }
     }
 }

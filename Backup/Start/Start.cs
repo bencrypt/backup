@@ -28,7 +28,21 @@ namespace Backup.Start
                     ConsoleWriter.WriteWithColor("Starte Backup ...", ConsoleColor.White);
                     
                     // Backup
-                    BackupRunner.RunBackup(profile);
+                    try
+                    {
+                        BackupRunner.RunBackup(profile);
+                    }
+                    catch (Exception e)
+                    {
+                        // Fehlermeldung
+                        ConsoleWriter.WriteWithColor("Das Backup wurde aufgrund eines Fehlers abgebrochen!", ConsoleColor.Red);
+                        ConsoleWriter.WriteWithColor("Fehlermeldung:\n", ConsoleColor.Red);
+                        ConsoleWriter.WriteWithColor("{0}\n", ConsoleColor.Yellow, e.Message);
+                        
+                        // auf Eingabe warten, damit sich das Fenster nicht sofort schließt
+                        ConsoleWriter.WriteWithColor("Zum Beenden des Programms bitte [ENTER] drücken.", ConsoleColor.Cyan);
+                        Console.ReadLine();
+                    }
                 }
                 
                 // Nachfrage, ob noch ein Backup-Durchgang
