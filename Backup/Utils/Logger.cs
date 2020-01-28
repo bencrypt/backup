@@ -8,16 +8,16 @@ namespace Backup.Utils
         [Conditional("DEBUG")]
         public static void LogInfo(string text)
         {
-            Console.WriteLine("---\nLogInfo:");
-            Console.WriteLine(text);
+            ConsoleWriter.WriteWithColor("---\nLogInfo:", ConsoleColor.Yellow);
+            ConsoleWriter.WriteWithColor(text, ConsoleColor.Yellow);
         }
 
         [Conditional("DEBUG")]
         public static void LogInfo(string text, params object[] args)
         {
-            Console.WriteLine("---\nLogInfo:");
-            Console.WriteLine(text, args);
-            Console.WriteLine("---");
+            ConsoleWriter.WriteWithColor("---\nLogInfo:", ConsoleColor.Yellow);
+            ConsoleWriter.WriteWithColor(text, ConsoleColor.Yellow, args);
+            ConsoleWriter.WriteWithColor("---", ConsoleColor.Yellow);
         }
     }
 }
