@@ -24,12 +24,16 @@ namespace Backup.Start
                 // falls gültiges Profil ausgewählt, Backup durchführen
                 if (profile != null)
                 {
+                    // Nachricht
+                    ConsoleWriter.WriteWithColor("Starte Backup ...", ConsoleColor.White);
+                    
+                    // Backup
                     BackupRunner.RunBackup(profile);
                 }
                 
                 // Nachfrage, ob noch ein Backup-Durchgang
                 ConsoleWriter.WriteWithColor("Soll noch ein Backup durchgeführt werden? [J]/[beliebige andere Taste]", 
-                                             ConsoleColor.Black);
+                                             ConsoleColor.Cyan);
                 string input = Console.ReadLine();
                 if (input == null || !input.ToLower().Equals("j"))
                 {
