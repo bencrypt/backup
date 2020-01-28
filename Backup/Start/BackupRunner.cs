@@ -40,15 +40,19 @@ namespace Backup.Start
 
         private static bool BackupDirectoryRecursively(string srcDir, string destDir, IList<string> excludePaths)
         {
+            // Ergebnis-Flag
+            // => true, falls mindestens eine Datei oder ein Ordner aktualisiert/hinzugefügt/entfernt
+            bool atLeastOneNewer = false;
+            
             // erstelle das Zielverzeichnis, falls notwendig
             if (!Directory.Exists(destDir))
             {
                 Directory.CreateDirectory(destDir);
+                atLeastOneNewer = true;
             }
 
             // sichere alle neueren Dateien aus dem Quellverzeichnis ins Zielverzeichnis,
             // falls nicht excluded
-            bool atLeastOneNewer = false;
             foreach (string srcFile in Directory.GetFiles(srcDir))
             {
                 if (!excludePaths.Contains(srcFile))
@@ -69,6 +73,12 @@ namespace Backup.Start
             
             // alle nicht mehr vorhandenen Dateien und Ordner löschen
             bool atLeastOneDeleted = DeleteFilesAndSubdirsNotContainedAnymore(srcDir, destDir);
+            
+            // Ergebnis-Flag aktualisieren
+            if (!atLeastOneNewer && atLeastOneDeleted)
+            {
+                atLeastOneNewer = true;
+            }
 
             // gehe alle Sub-Verzeichnisse durch, falls nicht excluded
             foreach (string subDir in Directory.GetDirectories(srcDir))
@@ -80,7 +90,13 @@ namespace Backup.Start
                     string destOfSubDir = Path.Combine(destDir, Path.GetFileName(subDir));
                     
                     // sichere das Sub-Verzeichnis
-                    BackupDirectoryRecursively(subDir, destOfSubDir, excludePaths);
+                    bool atLeastOneNewerInSubDir = BackupDirectoryRecursively(subDir, destOfSubDir, excludePaths);
+                    
+                    // Ergebnis-Flag aktualisieren
+                    if (!atLeastOneNewer && atLeastOneNewerInSubDir)
+                    {
+                        atLeastOneNewer = true;
+                    }
                 }
             }
             
@@ -99,6 +115,12 @@ namespace Backup.Start
             {
                 // Kontroll-Nachricht
                 ConsoleWriter.WriteWithColor("Neu erstellte Datei '{0}' ...", ConsoleColor.White, srcFile, destOfFile);
+                
+                // Datei sichern
+                File.Copy(srcFile, destOfFile, true);
+                
+                // true zurückgeben, da Datei neu hinzugefügt
+                return true;
             }
             else if (File.GetLastWriteTime(srcFile) > File.GetLastWriteTime(destOfFile))
             {
