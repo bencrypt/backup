@@ -6,6 +6,7 @@ using System.Linq;
 using System.Xml;
 using System.Xml.Linq;
 using System.Xml.XPath;
+using Backup.Resources;
 using Backup.Utils;
 
 namespace Backup.Xml
@@ -16,7 +17,7 @@ namespace Backup.Xml
         {
             if (!File.Exists(path) || !path.EndsWith(".xml"))
             {
-                throw new Exception("Unter dem angegebenen Pfad konnte kein gültiges Backup-Profil gefunden werden");
+                throw new Exception(Lang.InvalidProfilePath);
             }
 
             // XML-Datei mit Backup-Profiles laden

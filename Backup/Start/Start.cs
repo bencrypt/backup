@@ -3,6 +3,10 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using System.Linq;
+using System.Net.Mime;
+using System.Reflection;
+using System.Threading;
+using Backup.Resources;
 using Backup.Utils;
 using Backup.Xml;
 
@@ -12,6 +16,12 @@ namespace Backup.Start
     {
         static void Main(string[] args)
         {
+            // change to English for testing
+            //Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
+
+            string scriptDir = Path.GetFullPath(Assembly.GetExecutingAssembly().Location);
+            string profileDir = Path.GetFullPath(Path.Combine(scriptDir, "..", "..", "backup_profiles"));
+            
             // ACHTUNG: ConsoleWriter nutzen anstatt direkt Console.WriteLine
 
             // Dauerschleife, damit ggf. mehrere Durchgänge an einem Stück möglich sind
@@ -19,15 +29,13 @@ namespace Backup.Start
             while (true)
             {
                 // prüfe, ob Ordner mit Backup-Profilen existiert
-                if (!Directory.Exists("../backup_profiles"))
+                if (!Directory.Exists(profileDir))
                 {
-                    String notExisting = Path.Combine(Path.GetFullPath(".."), "backup_profiles");
-                    
                     // Fehlermeldung
-                    ConsoleWriter.WriteWithColor("Der Ordner {0} für die Backup-Profile existiert nicht!\n", ConsoleColor.Red, notExisting);
+                    ConsoleWriter.WriteWithColor(Lang.ErrorNotExistingProfile, ConsoleColor.Red, profileDir);
                         
                     // auf Eingabe warten, damit sich das Fenster nicht sofort schließt
-                    ConsoleWriter.WriteWithColor("Zum Beenden des Programms bitte [ENTER] drücken.", ConsoleColor.Cyan);
+                    ConsoleWriter.WriteWithColor(Lang.EndProgram, ConsoleColor.Red);
                     Console.ReadLine();
                     
                     // Programm beenden
@@ -35,13 +43,13 @@ namespace Backup.Start
                 }
                 
                 // Backup-Profil auswählen
-                BackupProfile profile = SelectBackupProfile();
+                BackupProfile profile = SelectBackupProfile(profileDir);
 
                 // falls gültiges Profil ausgewählt, Backup durchführen
                 if (profile != null)
                 {
                     // Nachricht
-                    ConsoleWriter.WriteWithColor("Starte Backup ...", ConsoleColor.White);
+                    ConsoleWriter.WriteWithColor(Lang.StartBackup, ConsoleColor.White);
                     
                     // Backup
                     try
@@ -51,19 +59,18 @@ namespace Backup.Start
                     catch (Exception e)
                     {
                         // Fehlermeldung
-                        ConsoleWriter.WriteWithColor("Das Backup wurde aufgrund eines Fehlers abgebrochen!", ConsoleColor.Red);
-                        ConsoleWriter.WriteWithColor("Fehlermeldung:\n", ConsoleColor.Red);
+                        ConsoleWriter.WriteWithColor(Lang.StopBecauseOfError, ConsoleColor.Red);
+                        ConsoleWriter.WriteWithColor(Lang.ErrorMessage, ConsoleColor.Red);
                         ConsoleWriter.WriteWithColor("{0}\n", ConsoleColor.Yellow, e.Message);
                         
                         // auf Eingabe warten, damit sich das Fenster nicht sofort schließt
-                        ConsoleWriter.WriteWithColor("Zum Beenden des Programms bitte [ENTER] drücken.", ConsoleColor.Cyan);
+                        ConsoleWriter.WriteWithColor(Lang.EndProgram, ConsoleColor.Cyan);
                         Console.ReadLine();
                     }
                 }
                 
                 // Nachfrage, ob noch ein Backup-Durchgang
-                ConsoleWriter.WriteWithColor("Soll noch ein Backup durchgeführt werden? [j]/[N]", 
-                                             ConsoleColor.Cyan);
+                ConsoleWriter.WriteWithColor(Lang.AnotherRun, ConsoleColor.Cyan);
                 string input = Console.ReadLine();
                 if (input == null || !input.ToLower().Equals("j"))
                 {
@@ -73,16 +80,14 @@ namespace Backup.Start
             }
         }
 
-        private static BackupProfile SelectBackupProfile()
+        private static BackupProfile SelectBackupProfile(string profileDir)
         {
             // Start-Nachricht
-            ConsoleWriter.WriteWithColor("Willkommen beim Backup! " +
-                                         "Bitte die Zahl des auszuführenden Backup-Profils eingeben:", 
-                                         ConsoleColor.Cyan);
+            ConsoleWriter.WriteWithColor(Lang.Start, ConsoleColor.Cyan);
 
             // alle Profile-Pfade in Liste speichern
             IList<string> profilePaths = new List<string>();
-            foreach (string profile in Directory.GetFiles("../backup_profiles"))
+            foreach (string profile in Directory.GetFiles(profileDir))
             {
                 profilePaths.Add(profile);
             }
@@ -104,8 +109,7 @@ namespace Backup.Start
                 if (!parsed || input <= 0 || input > profilePaths.Count)
                 {
                     // Fehlermeldung
-                    ConsoleWriter.WriteWithColor("Ungültige Eingabe! Bitte eine der angegebenen Profile durch " +
-                                                 "Eingabe der vorangestellten Nummer wählen!", ConsoleColor.Red);
+                    ConsoleWriter.WriteWithColor(Lang.InvalidNumber, ConsoleColor.Red);
                     
                     // Input zurück auf -1 setzen
                     input = -1;

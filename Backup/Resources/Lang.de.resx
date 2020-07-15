@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <data name="ErrorNotExistingProfile" xml:space="preserve">
+        <value>Der Ordner {0} für die Backup-Profile existiert nicht!</value>
+    </data>
+    <data name="EndProgram" xml:space="preserve">
+        <value>Zum Beenden des Programms bitte [ENTER] drücken.</value>
+    </data>
+    <data name="StartBackup" xml:space="preserve">
+        <value>Starte Backup ...</value>
+    </data>
+    <data name="StopBecauseOfError" xml:space="preserve">
+        <value>Das Backup wurde aufgrund eines Fehlers abgebrochen!</value>
+    </data>
+    <data name="ErrorMessage" xml:space="preserve">
+        <value>Fehlermeldung:\n</value>
+    </data>
+    <data name="AnotherRun" xml:space="preserve">
+        <value>Soll noch ein weiteres Backup durchgeführt werden? [j/N]</value>
+    </data>
+    <data name="Start" xml:space="preserve">
+        <value>Willkommen beim Backup! Bitte die Zahl des auszuführenden Backup-Profils eingeben:</value>
+    </data>
+    <data name="InvalidNumber" xml:space="preserve">
+        <value>Ungültige Eingabe! Bitte eine der angegebenen Profile durch Eingabe der vorangestellten Nummer wählen!</value>
+    </data>
+    <data name="InvalidProfilePath" xml:space="preserve">
+        <value>Unter dem angegebenen Pfad konnte kein gültiges Backup-Profil gefunden werden.</value>
+    </data>
+    <data name="SuccessNoUpdate" xml:space="preserve">
+        <value>Backup durchgeführt! Alle Dateien waren bereits aktuell.</value>
+    </data>
+    <data name="SuccessUpdate" xml:space="preserve">
+        <value>Backup durchgeführt! Alle Dateien wurden auf den aktuellen Stand gebracht.</value>
+    </data>
+    <data name="CheckBackupLocation" xml:space="preserve">
+        <value>Überprüfe Backup Location: {0}</value>
+    </data>
+</root>

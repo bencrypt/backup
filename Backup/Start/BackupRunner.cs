@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.IO;
 using Backup.Utils;
+ using Backup.Resources;
 
 namespace Backup.Start
 {
@@ -15,8 +16,9 @@ namespace Backup.Start
             {
                 // Backup rekursiv für alle Verzeichnisse durchführen
                 // => der Rückgabewert gibt an, ob mindestens eine Datei aktualisiert wurde
+                ConsoleWriter.WriteWithColor(Lang.CheckBackupLocation, ConsoleColor.Gray, backupLocation.Path);
                 bool updated = BackupDirectoryRecursively(
-                                        backupLocation.Path, backupLocation.Destination, backupLocation.ExcludePaths);
+                        backupLocation, backupLocation.Path, backupLocation.Destination, backupLocation.ExcludePaths);
 
                 // Informations-Flag für mindestens eine aktualisierte Datei setzen, falls noch nicht getan
                 if (!atLeastOneNewer && updated)
@@ -28,17 +30,16 @@ namespace Backup.Start
             // Kontroll-Nachricht am Ende des Backups
             if (!atLeastOneNewer)
             {
-                ConsoleWriter.WriteWithColor("Backup durchgeführt! Alle Dateien waren bereits aktuell.", 
-                                             ConsoleColor.Green);
+                ConsoleWriter.WriteWithColor(Lang.SuccessNoUpdate, ConsoleColor.Green);
             }
             else
             {
-                ConsoleWriter.WriteWithColor("Backup durchgeführt! Alle Dateien wurden auf den aktuellen Stand gebracht.",
-                                             ConsoleColor.Green);
+                ConsoleWriter.WriteWithColor(Lang.SuccessUpdate, ConsoleColor.Green);
             }
         }
 
-        private static bool BackupDirectoryRecursively(string srcDir, string destDir, IList<string> excludePaths)
+        private static bool BackupDirectoryRecursively(BackupLocation backupLocation, string srcDir, string destDir,
+            IList<string> excludePaths)
         {
             // Ergebnis-Flag
             // => true, falls mindestens eine Datei oder ein Ordner aktualisiert/hinzugefügt/entfernt
@@ -58,10 +59,10 @@ namespace Backup.Start
                 if (!excludePaths.Contains(srcFile))
                 {
                     // Kontroll-Nachricht
-                    //Logger.LogInfo("Überprüfe {0}", srcFile);
+                    //Logger.LogInfo("Check {0}", srcFile);
                     
                     // Dateien sichern
-                    bool saved = BackupFileIfNewer(srcFile, destDir);
+                    bool saved = BackupFileIfNewer(backupLocation, srcFile, destDir);
 
                     // falls mindestens eine Datei aktualisiert => Flag auf true setzen
                     if (!atLeastOneNewer && saved)
@@ -72,7 +73,7 @@ namespace Backup.Start
             }
             
             // alle nicht mehr vorhandenen Dateien und Ordner löschen
-            bool atLeastOneDeleted = DeleteFilesAndSubdirsNotContainedAnymore(srcDir, destDir);
+            bool atLeastOneDeleted = DeleteFilesAndSubdirsNotContainedAnymore(backupLocation, srcDir, destDir);
             
             // Ergebnis-Flag aktualisieren
             if (!atLeastOneNewer && atLeastOneDeleted)
@@ -90,7 +91,8 @@ namespace Backup.Start
                     string destOfSubDir = Path.Combine(destDir, Path.GetFileName(subDir));
                     
                     // sichere das Sub-Verzeichnis
-                    bool atLeastOneNewerInSubDir = BackupDirectoryRecursively(subDir, destOfSubDir, excludePaths);
+                    bool atLeastOneNewerInSubDir = BackupDirectoryRecursively(
+                                                        backupLocation, subDir, destOfSubDir, excludePaths);
                     
                     // Ergebnis-Flag aktualisieren
                     if (!atLeastOneNewer && atLeastOneNewerInSubDir)
@@ -104,8 +106,10 @@ namespace Backup.Start
             return (atLeastOneNewer || atLeastOneDeleted);
         }
 
-        private static bool BackupFileIfNewer(string srcFile, string destDir)
+        private static bool BackupFileIfNewer(BackupLocation backupLocation, string srcFile, string destDir)
         {
+            string pathWithoutLocationPrefix = srcFile.Remove(0, backupLocation.Path.Length);
+            
             // kombiniere das Zielverzeichnis mit dem Dateinamen
             // => Backup-Pfad für die Datei
             string destOfFile = Path.Combine(destDir, Path.GetFileName(srcFile));
@@ -114,7 +118,7 @@ namespace Backup.Start
             if (!File.Exists(destOfFile))
             {
                 // Kontroll-Nachricht
-                ConsoleWriter.WriteWithColor("Neu erstellte Datei '{0}'", ConsoleColor.White, srcFile, destOfFile);
+                ConsoleWriter.WriteWithColor("+ '{0}'", ConsoleColor.White, pathWithoutLocationPrefix);
 
                 // Datei sichern
                 File.Copy(srcFile, destOfFile, true);
@@ -126,7 +130,7 @@ namespace Backup.Start
             {
                 // Kontroll-Nachricht
                 //Logger.LogInfo("Sichere:\n{0}\n=> {1}", srcFile, destOfFile);
-                ConsoleWriter.WriteWithColor("Aktualisierte Datei '{0}'", ConsoleColor.White, srcFile, destOfFile);
+                ConsoleWriter.WriteWithColor("* '{0}'", ConsoleColor.White, pathWithoutLocationPrefix);
                 
                 // Ziel-Datei (falls schon vorhanden) als "normal" markieren, damit sie überschrieben werden kann
                 // (z.B. sind git-Dateien schreibgeschützt, weshalb dieser Schritt vor dem Überschreiben
@@ -147,7 +151,7 @@ namespace Backup.Start
             return false;
         }
 
-        private static bool DeleteFilesAndSubdirsNotContainedAnymore(string srcDir, string destDir)
+        private static bool DeleteFilesAndSubdirsNotContainedAnymore(BackupLocation backupLocation, string srcDir, string destDir)
         {
             // Ergebnis-Flag
             bool atLeastOneDeleted = false;
@@ -158,13 +162,14 @@ namespace Backup.Start
             {
                 // ursprünglichen Quellpfad ermitteln
                 string shouldBeSrcFile = Path.Combine(srcDir, Path.GetFileName(destFile));
+                string pathWithoutLocationPrefix = shouldBeSrcFile.Remove(0, backupLocation.Path.Length);
                 
                 // lösche die Zieldatei, falls keine Datei (mehr) unter Quellpfad
                 if (!File.Exists(shouldBeSrcFile))
                 {
                     // Kontroll-Nachricht
                     //Logger.LogInfo("Gelöschte Datei: {0}", shouldBeSrcFile);
-                    ConsoleWriter.WriteWithColor("Gelöschte Datei '{0}'", ConsoleColor.White, shouldBeSrcFile);
+                    ConsoleWriter.WriteWithColor("- '{0}'", ConsoleColor.White, pathWithoutLocationPrefix);
                     
                     // Dateiattribute auf "normal" setzen, damit die Datei gelöscht werden kann
                     // => z.B. sind einige git-Dateien read-only, weshalb man sie sonst nicht löschen kann
@@ -187,13 +192,14 @@ namespace Backup.Start
             {
                 // ursprünglichen Quellpfad ermitteln
                 string shouldBeSrcDir = Path.Combine(srcDir, Path.GetFileName(destSubDir));
+                string pathWithoutLocationPrefix = shouldBeSrcDir.Remove(0, backupLocation.Path.Length);
                 
                 // lösche die Zieldatei, falls kein Verzeichnis (mehr) unter Quellpfad
                 if (!Directory.Exists(shouldBeSrcDir))
                 {
                     // Kontroll-Nachricht
                     //Logger.LogInfo("Gelöschtes Verzeichnis: {0}", shouldBeSrcDir);
-                    ConsoleWriter.WriteWithColor("Gelöschtes Verzeichnis '{0}'", ConsoleColor.White, shouldBeSrcDir);
+                    ConsoleWriter.WriteWithColor("- '{0}'", ConsoleColor.White, pathWithoutLocationPrefix);
                     
                     // Verzeichnis rekursiv löschen
                     // => eigene Methode, da ggf. Datei-Attribute geändert werden müssen
