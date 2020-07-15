@@ -18,6 +18,22 @@ namespace Backup.Start
             // => Benutzer wird nach jedem Durchgang gefragt, ob fortfahren oder beenden
             while (true)
             {
+                // prüfe, ob Ordner mit Backup-Profilen existiert
+                if (!Directory.Exists("../backup_profiles"))
+                {
+                    String notExisting = Path.Combine(Path.GetFullPath(".."), "backup_profiles");
+                    
+                    // Fehlermeldung
+                    ConsoleWriter.WriteWithColor("Der Ordner {0} für die Backup-Profile existiert nicht!\n", ConsoleColor.Red, notExisting);
+                        
+                    // auf Eingabe warten, damit sich das Fenster nicht sofort schließt
+                    ConsoleWriter.WriteWithColor("Zum Beenden des Programms bitte [ENTER] drücken.", ConsoleColor.Cyan);
+                    Console.ReadLine();
+                    
+                    // Programm beenden
+                    Environment.Exit(1);
+                }
+                
                 // Backup-Profil auswählen
                 BackupProfile profile = SelectBackupProfile();
 
@@ -46,7 +62,7 @@ namespace Backup.Start
                 }
                 
                 // Nachfrage, ob noch ein Backup-Durchgang
-                ConsoleWriter.WriteWithColor("Soll noch ein Backup durchgeführt werden? [J]/[beliebige andere Taste]", 
+                ConsoleWriter.WriteWithColor("Soll noch ein Backup durchgeführt werden? [j]/[N]", 
                                              ConsoleColor.Cyan);
                 string input = Console.ReadLine();
                 if (input == null || !input.ToLower().Equals("j"))

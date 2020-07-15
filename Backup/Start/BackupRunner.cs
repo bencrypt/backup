@@ -1,4 +1,4 @@
-﻿using System;
+﻿﻿using System;
 using System.Collections.Generic;
 using System.IO;
 using Backup.Utils;
@@ -114,8 +114,8 @@ namespace Backup.Start
             if (!File.Exists(destOfFile))
             {
                 // Kontroll-Nachricht
-                ConsoleWriter.WriteWithColor("Neu erstellte Datei '{0}' ...", ConsoleColor.White, srcFile, destOfFile);
-                
+                ConsoleWriter.WriteWithColor("Neu erstellte Datei '{0}'", ConsoleColor.White, srcFile, destOfFile);
+
                 // Datei sichern
                 File.Copy(srcFile, destOfFile, true);
                 
@@ -126,7 +126,15 @@ namespace Backup.Start
             {
                 // Kontroll-Nachricht
                 //Logger.LogInfo("Sichere:\n{0}\n=> {1}", srcFile, destOfFile);
-                ConsoleWriter.WriteWithColor("Aktualisierte Datei '{0}' ...", ConsoleColor.White, srcFile, destOfFile);
+                ConsoleWriter.WriteWithColor("Aktualisierte Datei '{0}'", ConsoleColor.White, srcFile, destOfFile);
+                
+                // Ziel-Datei (falls schon vorhanden) als "normal" markieren, damit sie überschrieben werden kann
+                // (z.B. sind git-Dateien schreibgeschützt, weshalb dieser Schritt vor dem Überschreiben
+                //  notwendig ist)
+                if (File.Exists(destOfFile))
+                {
+                    File.SetAttributes(destOfFile, FileAttributes.Normal);
+                }
                 
                 // Datei sichern
                 File.Copy(srcFile, destOfFile, true);
@@ -156,7 +164,7 @@ namespace Backup.Start
                 {
                     // Kontroll-Nachricht
                     //Logger.LogInfo("Gelöschte Datei: {0}", shouldBeSrcFile);
-                    ConsoleWriter.WriteWithColor("Gelöschte Datei '{0}' ...", ConsoleColor.White, shouldBeSrcFile);
+                    ConsoleWriter.WriteWithColor("Gelöschte Datei '{0}'", ConsoleColor.White, shouldBeSrcFile);
                     
                     // Dateiattribute auf "normal" setzen, damit die Datei gelöscht werden kann
                     // => z.B. sind einige git-Dateien read-only, weshalb man sie sonst nicht löschen kann
@@ -185,7 +193,7 @@ namespace Backup.Start
                 {
                     // Kontroll-Nachricht
                     //Logger.LogInfo("Gelöschtes Verzeichnis: {0}", shouldBeSrcDir);
-                    ConsoleWriter.WriteWithColor("Gelöschtes Verzeichnis '{0}' ...", ConsoleColor.White, shouldBeSrcDir);
+                    ConsoleWriter.WriteWithColor("Gelöschtes Verzeichnis '{0}'", ConsoleColor.White, shouldBeSrcDir);
                     
                     // Verzeichnis rekursiv löschen
                     // => eigene Methode, da ggf. Datei-Attribute geändert werden müssen
