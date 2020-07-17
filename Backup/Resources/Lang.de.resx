@@ -31,7 +31,7 @@
         <value>Das Backup wurde aufgrund eines Fehlers abgebrochen!</value>
     </data>
     <data name="ErrorMessage" xml:space="preserve">
-        <value>Fehlermeldung:\n</value>
+        <value>Fehlermeldung:</value>
     </data>
     <data name="AnotherRun" xml:space="preserve">
         <value>Soll noch ein weiteres Backup durchgeführt werden? [j/N]</value>

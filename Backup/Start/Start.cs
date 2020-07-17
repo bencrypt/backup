@@ -14,67 +14,75 @@ namespace Backup.Start
 {
     class Start
     {
+        // ATTENTION: Use ConsoleWriter instead of Console.WriteLine to use Colors
+        
         static void Main(string[] args)
         {
             // change to English for testing
             //Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
 
-            string scriptDir = Path.GetFullPath(Assembly.GetExecutingAssembly().Location);
-            string profileDir = Path.GetFullPath(Path.Combine(scriptDir, "..", "..", "backup_profiles"));
-            
-            // ACHTUNG: ConsoleWriter nutzen anstatt direkt Console.WriteLine
+            // get path of backup profiles, seen from the .exe or .sh in "../backup_profiles"
+            string scriptPath = Path.GetFullPath(Assembly.GetExecutingAssembly().Location);
+            string profileDir = Path.GetFullPath(Path.Combine(scriptPath, "..", "..", "backup_profiles"));
 
-            // Dauerschleife, damit ggf. mehrere Durchgänge an einem Stück möglich sind
-            // => Benutzer wird nach jedem Durchgang gefragt, ob fortfahren oder beenden
+            // endless loop to enable multiple runs without restarting the program
+            // => the user is asked if he wants to continue after each run
             while (true)
             {
-                // prüfe, ob Ordner mit Backup-Profilen existiert
+                // check if the backup profiles directory is existing
+                // => if not so the program can not continue
                 if (!Directory.Exists(profileDir))
                 {
-                    // Fehlermeldung
-                    ConsoleWriter.WriteWithColor(Lang.ErrorNotExistingProfile, ConsoleColor.Red, profileDir);
+                    // error message
+                    ConsoleWriter.WriteLineWithColor(Lang.ErrorNotExistingProfile, OutputColors.Error, profileDir);
                         
-                    // auf Eingabe warten, damit sich das Fenster nicht sofort schließt
-                    ConsoleWriter.WriteWithColor(Lang.EndProgram, ConsoleColor.Red);
+                    // wait for input to avoid that the window closes immediately
+                    ConsoleWriter.WriteLineWithColor(Lang.EndProgram, OutputColors.Error);
                     Console.ReadLine();
                     
-                    // Programm beenden
+                    // exit
                     Environment.Exit(1);
                 }
                 
-                // Backup-Profil auswählen
+                // choose backup profile
                 BackupProfile profile = SelectBackupProfile(profileDir);
 
-                // falls gültiges Profil ausgewählt, Backup durchführen
+                // run backup if there is a valid profile chosen
                 if (profile != null)
                 {
-                    // Nachricht
-                    ConsoleWriter.WriteWithColor(Lang.StartBackup, ConsoleColor.White);
+                    // info message
+                    ConsoleWriter.WriteLineWithColor(Lang.StartBackup, OutputColors.MainMessages);
                     
-                    // Backup
+                    // backup
                     try
                     {
                         BackupRunner.RunBackup(profile);
                     }
                     catch (Exception e)
                     {
-                        // Fehlermeldung
-                        ConsoleWriter.WriteWithColor(Lang.StopBecauseOfError, ConsoleColor.Red);
-                        ConsoleWriter.WriteWithColor(Lang.ErrorMessage, ConsoleColor.Red);
-                        ConsoleWriter.WriteWithColor("{0}\n", ConsoleColor.Yellow, e.Message);
+                        // error message
+                        ConsoleWriter.WriteLineWithColor(Lang.StopBecauseOfError, OutputColors.Error);
+                        ConsoleWriter.WriteLineWithColor(Lang.ErrorMessage, OutputColors.Error);
+                        ConsoleWriter.WriteLineWithColor("{0}", OutputColors.ErrorDetails, e.Message);
+
+                        // stack trace
+                        //ConsoleWriter.WriteWithColor(e.StackTrace, ConsoleColor.Yellow);
                         
-                        // auf Eingabe warten, damit sich das Fenster nicht sofort schließt
-                        ConsoleWriter.WriteWithColor(Lang.EndProgram, ConsoleColor.Cyan);
+                        // wait for input to avoid that the window closes immediately
+                        ConsoleWriter.WriteLineWithColor(Lang.EndProgram, OutputColors.MainMessages);
                         Console.ReadLine();
+                        
+                        // exit
+                        Environment.Exit(1);
                     }
                 }
                 
-                // Nachfrage, ob noch ein Backup-Durchgang
-                ConsoleWriter.WriteWithColor(Lang.AnotherRun, ConsoleColor.Cyan);
+                // ask if the user wants another backup run
+                // => if not so exit, else the endless loop will take another run
+                ConsoleWriter.WriteLineWithColor(Lang.AnotherRun, OutputColors.MainMessages);
                 string input = Console.ReadLine();
                 if (input == null || !input.ToLower().Equals("j"))
                 {
-                    // abbrechen
                     break;
                 }
             }
@@ -82,47 +90,49 @@ namespace Backup.Start
 
         private static BackupProfile SelectBackupProfile(string profileDir)
         {
-            // Start-Nachricht
-            ConsoleWriter.WriteWithColor(Lang.Start, ConsoleColor.Cyan);
+            // print starting message
+            ConsoleWriter.WriteLineWithColor(Lang.Start, OutputColors.MainMessages);
 
-            // alle Profile-Pfade in Liste speichern
+            // save all profile paths into a list
             IList<string> profilePaths = new List<string>();
             foreach (string profile in Directory.GetFiles(profileDir))
             {
                 profilePaths.Add(profile);
             }
             
-            // alle Profile zur Auswahl anbieten
+            // make all profile paths selectable by the user through entering a corresponding number
             for (int option = 1; option <= profilePaths.Count; option++)
             {
-                ConsoleWriter.WriteWithColor("[{0}]: {1}", ConsoleColor.Cyan, 
+                ConsoleWriter.WriteLineWithColor("[{0}]: {1}", OutputColors.MainMessages, 
                                              option, Path.GetFileNameWithoutExtension(profilePaths[option-1]));
             }
 
-            // Auswahl verarbeiten und (falls gültig) Profil laden
-            // => solange durchführen, bis gültige Auswahl
+            // check input and load profile when it is valid
+            // => repeat until there is valid input
             int input = -1;
             while (input == -1)
             {
-                // Input entgegennehmen
+                // take input
                 bool parsed = int.TryParse(Console.ReadLine(), out input);
+                
+                // check input
                 if (!parsed || input <= 0 || input > profilePaths.Count)
                 {
-                    // Fehlermeldung
-                    ConsoleWriter.WriteWithColor(Lang.InvalidNumber, ConsoleColor.Red);
+                    // error message because of invalid input
+                    ConsoleWriter.WriteLineWithColor(Lang.InvalidNumber, OutputColors.Error);
                     
-                    // Input zurück auf -1 setzen
+                    // reset input on -1 for taking another loop run
                     input = -1;
                 }
                 else
                 {
-                    // (gültiges) Profil erstellen und zurückgeben
+                    // valid input, return backup profile
                     return BackupProfileConverter.LoadBackupProfile(profilePaths[input - 1]);
                 }
             }
 
-            // pro-forma null zurückgeben, was aber gar nicht erreicht wird, da 
-            // oben immer auf eine gültige Eingabe gewartet wird
+            // return null due to compiler checking, is never reached since the loop aboves
+            // repeats until there is a valid input for continuing the program
             return null;
         }
 

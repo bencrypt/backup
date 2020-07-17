@@ -15,30 +15,36 @@ namespace Backup.Xml
     {
         public static BackupProfile LoadBackupProfile(string path)
         {
+            /*
+             * load XML
+             */
+            
+            // check that there is an xml under the given path
             if (!File.Exists(path) || !path.EndsWith(".xml"))
             {
                 throw new Exception(Lang.InvalidProfilePath);
             }
 
-            // XML-Datei mit Backup-Profiles laden
+            // load XML
             XDocument doc = XDocument.Load(path);
 
             /*
-             * alle BackupLocations in programm-interne Daten umwandeln
+             * convert XML entries to BackupProfile
              */
             
-            // ermittle alle BackupLocations und erstelle eine (noch leere) Liste dafür
+            // get all BackupLocations and create an (now empty) list for them
             IEnumerable<XElement> xmlLocs = doc.XPathSelectElements("/backup_profile/backup_location");
             IList<BackupLocation> locs = new List<BackupLocation>();
 
-            // gehe alle BackupLocations durch, erstelle daraus interne Elemente und füge sie zur Liste hinzu
+            // go through each BackupLocation-entry, convert it to an program-internal object
+            // and add this one to the created list
             foreach (XElement xmlLoc in xmlLocs)
             {
-                // Quell- und Zielordner
+                // source and dest path
                 string locPath = xmlLoc.Element("path").Value;
                 string locDest = xmlLoc.Element("dest").Value;
 
-                // auszulassene Pfade (ggf. leer, falls nicht vorhanden)
+                // excluding paths (result list may be empty if not existing)
                 XElement locExcludes = xmlLoc.Element("exclude");
                 IList<string> excludePaths = new List<string>();
 
@@ -50,18 +56,22 @@ namespace Backup.Xml
                     }
                 }
 
-                // erstelle eine interne BackupLocation und füge sie zur Liste hinzu
+                // create the BackupLocation-object and add it to the result list
                 locs.Add(new BackupLocation(locPath, locDest, excludePaths));
             }
 
-            // Backup-Profil aus importierten Daten erstellen
+            // create a BackupProfile from the BackupLocations
             string name = doc.XPathSelectElement("/backup_profile/name").Value;
             BackupProfile profile = new BackupProfile(name, locs);
+            
+            /*
+             * return converted BackupProfile
+             */
 
-            // Kontrollnachricht
+            // control message
             //Logger.LogInfo(profile.ToString());
             
-            // gebe das erstellte BackupProfile zurück
+            // return the profile
             return profile;
         }
     }
