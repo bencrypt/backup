@@ -18,75 +18,75 @@
     <resheader name="writer">
         <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
     </resheader>
-
+    
     <!-- lang strings -->
-
+    
     <!-- errors -->
     <data name="ErrorNotExistingProfile" xml:space="preserve">
-        <value>Der Ordner {0} für die Backup-Profile existiert nicht!</value>
+        <value>The directory {0} for the backup profiles does not exist!</value>
     </data>
     <data name="StopBecauseOfError" xml:space="preserve">
-        <value>Das Backup wurde aufgrund eines Fehlers abgebrochen!</value>
+        <value>The backup got stopped due to an error ...</value>
     </data>
     <data name="ErrorMessage" xml:space="preserve">
-        <value>Fehlermeldung:</value>
+        <value>Error message:</value>
     </data>
     <data name="InvalidNumber" xml:space="preserve">
-        <value>Ungültige Eingabe! Bitte eine der angegebenen Profile durch Eingabe der vorangestellten Nummer wählen!</value>
+        <value>Invalid input! Please choose one of the given profiles via entering the leading number!</value>
     </data>
     <data name="InvalidProfilePath" xml:space="preserve">
-        <value>Unter dem angegebenen Pfad konnte kein gültiges Backup-Profil gefunden werden.</value>
+        <value>There is no valid backup profile at the given path.</value>
     </data>
-
+    
     <!-- xml errors -->
 
     <data name="ErrorXmlMissingBackupLocations" xml:space="preserve">
-        <value>Die XML-Datei hat nicht die äußeren Elemente '/backup_profile/backup_location'</value>
+        <value>The XML-file has not the outer elements '/backup_profile/backup_location'</value>
     </data>
     <data name="ErrorXmlMalformatted" xml:space="preserve">
-        <value>Die XML-Datei ist fehlerhaft aufgebaut.</value>
+        <value>The XML-file is malformatted.</value>
     </data>
     <data name="ErrorXmlNodes" xml:space="preserve">
-        <value>Es fehlen Elemente in der gewählten BackupLocation-Datei oder sind ungültig!</value>
+        <value>There are missing or invalid elements in the selected backup location file!</value>
     </data>
     <data name="ErrorXmlSrc" xml:space="preserve">
-        <value>Der 'src'-Pfad fehlt oder ist ungültig.</value>
+        <value>The 'src'-path is missing or invalid.</value>
     </data>
     <data name="ErrorXmlDest" xml:space="preserve">
-        <value>Der 'dest'-Pfad fehlt oder ist ungültig.</value>
+        <value>The 'dest'-path is missing or invalid.</value>
     </data>
     <data name="ErrorXmlExcludeMissingPaths" xml:space="preserve">
-        <value>Innerhalb des 'exclude'-Elements fehlen 'path'-Elemente.</value>
+        <value>The 'exclude'-element is missing 'path' sub-elements.</value>
     </data>
     <data name="ErrorXmlExcludeInvalidPath" xml:space="preserve">
-        <value>Der 'exclude'-Pfad '{0}' ist ungültig.</value>
+        <value>The 'exclude'-path '{0}' is invalid.</value>
     </data>
-
+    
     <!-- start and end -->
     <data name="Start" xml:space="preserve">
-        <value>Willkommen beim Backup! Bitte die Zahl des auszuführenden Backup-Profils eingeben:</value>
+        <value>Welcome at the Backup! Please enter the number of the backup profile you wish to run:</value>
     </data>
     <data name="StartBackup" xml:space="preserve">
-        <value>Starte Backup ...</value>
+        <value>Start backup ...</value>
     </data>
     <data name="EndProgram" xml:space="preserve">
-        <value>Zum Beenden des Programms bitte [ENTER] drücken.</value>
+        <value>To close the program please press [ENTER].</value>
     </data>
     <data name="AnotherRun" xml:space="preserve">
-        <value>Soll noch ein weiteres Backup durchgeführt werden? [j/N]</value>
+        <value>Do you want to run another backup [y/N]</value>
     </data>
 
     <!-- backup location headline -->
     <data name="CheckBackupLocation" xml:space="preserve">
-        <value>Überprüfe Backup Location: {0}</value>
+        <value>Check Backup Location: {0}</value>
     </data>
-
+    
     <!-- success -->
     <data name="SuccessNoUpdate" xml:space="preserve">
-        <value>Backup durchgeführt! Alle Dateien waren bereits aktuell.</value>
+        <value>Backup successful! All files already were up-to-date.</value>
     </data>
     <data name="SuccessUpdate" xml:space="preserve">
-        <value>Backup durchgeführt! Alle Dateien wurden auf den aktuellen Stand gebracht.</value>
-    </data>
-
+        <value>Backup successful! All files were sucessfully updated.</value>
+    </data>    
+    
 </root>

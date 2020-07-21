@@ -1,10 +1,9 @@
-﻿﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Backup.Utils;
+﻿﻿using System.Collections.Generic;
+ using System.IO;
  using Backup.Resources;
+ using Backup.Utils;
 
-namespace Backup.Start
+ namespace Backup.Start
 {
     public class BackupRunner
     {
@@ -16,7 +15,7 @@ namespace Backup.Start
             {
                 // backup each directory recursively
                 // => the return value marks if at least one file was updated (for better output to the user)
-                ConsoleWriter.WriteLineWithColor(Lang.CheckBackupLocation, OutputColors.BackupLocations, backupLocation.Path);
+                ConsoleWriter.WriteBackupLocationHeadline(Lang.CheckBackupLocation, backupLocation.Path);
                 bool updated = BackupDirectoryRecursively(
                         backupLocation, backupLocation.Path, backupLocation.Destination, backupLocation.ExcludePaths);
 
@@ -30,11 +29,11 @@ namespace Backup.Start
             // output to the user after the backup (informs wheter there was something updated or not)
             if (!atLeastOneNewer)
             {
-                ConsoleWriter.WriteLineWithColor(Lang.SuccessNoUpdate, OutputColors.Success);
+                ConsoleWriter.WriteSuccessMessage(Lang.SuccessNoUpdate);
             }
             else
             {
-                ConsoleWriter.WriteLineWithColor(Lang.SuccessUpdate, OutputColors.Success);
+                ConsoleWriter.WriteSuccessMessage(Lang.SuccessUpdate);
             }
         }
 
