@@ -7,6 +7,13 @@
 {
     public class BackupRunner
     {
+        /// <summary>
+        /// Initiates the actual backup specified by the given backup profile. This includes adding new files/dirs,
+        /// updating existing but newer files, removing not (anymore) existing files and directories.
+        /// Writes on the console when the backup has finished successfully. Might throw errors which needs to be
+        /// captured from the caller of this method.
+        /// </summary>
+        /// <param name="profile">the backup profile to run</param>
         public static void RunBackup(BackupProfile profile)
         {
             // go through all BackupLocations in the BackupProfile to backup them
@@ -37,6 +44,16 @@
             }
         }
 
+        /// <summary>
+        /// Mirrors the given source directory to the given destination directory. This means new files are added,
+        /// not anymore existing files at the source will be deleted at the destination and newer files or
+        /// subdirectories are updated. Returns true when at least one modification was done, else false.
+        /// </summary>
+        /// <param name="backupLocation">the backup location for which the backup is run</param>
+        /// <param name="srcDir">the source directory to be mirrored</param>
+        /// <param name="destDir">the destination directory to contain the backup</param>
+        /// <param name="excludePaths">maybe defined exclude paths which are not to consider when doing the backup</param>
+        /// <returns>true when modifications, else false</returns>
         private static bool BackupDirectoryRecursively(BackupLocation backupLocation, string srcDir, string destDir,
             IList<string> excludePaths)
         {
@@ -104,6 +121,15 @@
             return (atLeastOneUpdated);
         }
 
+        /// <summary>
+        /// Mirrors the given source file to the given destination file. This means new files are added
+        /// and newer files are updated.
+        /// Returns true when at least one modification was done, else false.
+        /// </summary>
+        /// <param name="backupLocation">the backup location for which the backup is run</param>
+        /// <param name="srcFile">the source file to be mirrored</param>
+        /// <param name="destDir">the destination file to contain the backup</param>
+        /// <returns>true when modifications, else false</returns>
         private static bool BackupFileIfNewer(BackupLocation backupLocation, string srcFile, string destDir)
         {
             // get the file path without the path given in the BackupLocation
@@ -161,6 +187,15 @@
             return false;
         }
 
+        /// <summary>
+        /// Deletes files and subdirectories contained in the destination directory but not contained in the given
+        /// source directory.
+        /// Returns true when at least one modification was done, else false.
+        /// </summary>
+        /// <param name="backupLocation">the backup location for which the backup is run</param>
+        /// <param name="srcDir">the source directory to be mirrored</param>
+        /// <param name="destDir">the destination directory to contain the backup</param>
+        /// <returns>true when modifications, else false</returns>
         private static bool DeleteFilesAndSubdirsNotContainedAnymore(BackupLocation backupLocation, string srcDir, string destDir)
         {
             // result flag
@@ -244,6 +279,11 @@
             return atLeastOneDeleted;
         }
 
+        /// <summary>
+        /// Deletes the given directory recursively. Forces this deletion with removing a probably readonly
+        /// attribute.
+        /// </summary>
+        /// <param name="destDir">the directory to be deleted recursively</param>
         private static void DeleteDirectoryRecursively(string destDir)
         {
             // set directory attributes to "normal" so that the directory can be deleted at the end

@@ -4,6 +4,10 @@ namespace Backup.Utils
 {
     public class ConsoleWriter
     {
+        /*
+         * HELPING METHODS, PRIVATE ONLY
+         */
+        
         private static void WriteLineWithColor(string text, ConsoleColor color, params object[] args)
         {
             Console.ForegroundColor = color;

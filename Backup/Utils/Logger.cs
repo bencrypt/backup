@@ -4,7 +4,7 @@ namespace Backup.Utils
 {
     class Logger
     {
-        [Conditional("DEBUG")]
+        [Conditional("DEBUG")]    // only runs in backup mode
         public static void LogInfo(string text, params object[] args)
         {
             ConsoleWriter.WriteLogMessage("---");
