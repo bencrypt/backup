@@ -12,6 +12,11 @@ namespace Backup.Start
     {
         // ATTENTION: Use ConsoleWriter instead of Console.WriteLine to use Colors
         
+        /// <summary>
+        /// Starts the backup program initiating all required actions like profile choosing, parsing and running
+        /// the backup.
+        /// </summary>
+        /// <param name="args">unused command line arguments</param>
         static void Main(string[] args)
         {
             // change to English for testing
@@ -21,41 +26,34 @@ namespace Backup.Start
             string scriptPath = Path.GetFullPath(Assembly.GetExecutingAssembly().Location);
             string profileDir = Path.GetFullPath(Path.Combine(scriptPath, "..", "..", "backup_profiles"));
 
-            // endless loop to enable multiple runs without restarting the program
-            // => the user is asked if he wants to continue after each run
-            while (true)
+            // check if the backup profiles directory is existing
+            // => if not so, the program can not continue
+            if (!Directory.Exists(profileDir))
             {
-                // check if the backup profiles directory is existing
-                // => if not so the program can not continue
-                if (!Directory.Exists(profileDir))
-                {
-                    // error message
-                    ConsoleWriter.WriteErrorMessage(Lang.ErrorNotExistingProfile, profileDir);
-                        
-                    // wait for input to avoid that the window closes immediately
-                    ConsoleWriter.WriteErrorMessage(Lang.EndProgram);
-                    Console.ReadLine();
-                    
-                    // exit
-                    Environment.Exit(1);
-                }
+                // error message and exit
+                ConsoleWriter.WriteErrorMessage(Lang.ErrorNotExistingProfileDir, profileDir);
+                ExitAfterError();
+            }
+            
+            // choose backup profile, might be null when no one is existing or if an invalid
+            // profile is chosen
+            BackupProfile profile = SelectBackupProfile(profileDir);
+
+            // run backup if valid backup file, else prepare closing the program
+            if (profile == null)
+            {
+                // invalid or not existing profile,
+                // show information for closing the program in error color
+                ExitAfterError();
                 
-                // choose backup profile and run it if valid
-                BackupProfile profile = SelectBackupProfile(profileDir);
+            } else {
                 
-                if (profile != null)
-                {
-                    RunBackup(profile);
-                }
+                // valid profile, do backup
+                // => might exit with error when an error occurs while doing the backup
+                RunBackup(profile);
                 
-                // ask if the user wants another backup run
-                // => if not so exit, else the endless loop will take another run
-                ConsoleWriter.WriteMainMessage(Lang.AnotherRun);
-                string input = Console.ReadLine();
-                if (input == null || !input.ToLower().Equals("j"))
-                {
-                    break;
-                }
+                // if reached here, the backup made fully without errors
+                ExitWithoutError();
             }
         }
         
@@ -87,12 +85,8 @@ namespace Backup.Start
                 // stack trace
                 //ConsoleWriter.WriteErrorDetails(e.StackTrace, ConsoleColor.Yellow);
                         
-                // wait for input to avoid that the window closes immediately
-                ConsoleWriter.WriteMainMessage(Lang.EndProgram);
-                Console.ReadLine();
-                        
-                // exit
-                Environment.Exit(1);
+                // finish program
+                ExitAfterError();
             }
         }
 
@@ -108,8 +102,6 @@ namespace Backup.Start
         {
             // print starting message
             ConsoleWriter.WriteMainMessage(Lang.Start);
-            
-            // TODO: check if there are profiles to select
 
             // save all profile paths (xmls in profile directory) into a list
             IList<string> profilePaths = new List<string>();
@@ -121,11 +113,24 @@ namespace Backup.Start
                 }
             }
             
+            // check if there are profiles to select
+            // => if not so inform the user and return null
+            if (profilePaths.Count == 0)
+            {
+                ConsoleWriter.WriteErrorMessage(Lang.NoProfileAtPath, profileDir);
+                ConsoleWriter.WriteErrorDetails(Lang.NoProfileAtPathHelp);
+                return null;
+            }
+            
             // make all profile paths selectable by the user through entering a corresponding number
             for (int option = 1; option <= profilePaths.Count; option++)
             {
                 ConsoleWriter.WriteMainMessage("[{0}]: {1}", option, Path.GetFileNameWithoutExtension(profilePaths[option-1]));
             }
+            
+            // add option to close the program without running a backup
+            ConsoleWriter.WriteMainMessage("[0]: {0}", Lang.OptionCancel);
+            
 
             // check input and load profile when it is valid
             // => repeat until there is valid input
@@ -137,7 +142,17 @@ namespace Backup.Start
                 // take input
                 bool parsed = int.TryParse(Console.ReadLine(), out input);
                 
-                // check input
+                // handle exit input
+                if (parsed && input == 0)
+                {
+                    // repeat selection as information
+                    ConsoleWriter.WriteMainMessage(Lang.SelectExit);
+                    
+                    // close
+                    ExitWithoutError();
+                }
+                
+                // check non-exit input for valid selection of a backup profile
                 if (!parsed || input <= 0 || input > profilePaths.Count)
                 {
                     // error message because of invalid input
@@ -157,6 +172,34 @@ namespace Backup.Start
             // repeats until there is a valid input for continuing the program
             return null;
         }
+
+        /// <summary>
+        /// Prints an exit message in an error color and waits for a key stroke before closing the program so that
+        /// the window does not close immediately.
+        /// </summary>
+        private static void ExitAfterError()
+        {
+            // exit message with error color
+            ConsoleWriter.WriteErrorMessage(Lang.EndProgram);
+                    
+            // wait for input until actual closing
+            Console.ReadKey();
+            Environment.Exit(0);
+        }
         
+        /// <summary>
+        /// Prints an exit message in an non-error color and waits for a key stroke before closing the program so that
+        /// the window does not close immediately.
+        /// </summary>
+        private static void ExitWithoutError()
+        {
+            // exit message with non-error color
+            ConsoleWriter.WriteMainMessage(Lang.EndProgram);
+                    
+            // wait for input until actual closing
+            Console.ReadKey();
+            Environment.Exit(0);
+        }
+
     }
 }

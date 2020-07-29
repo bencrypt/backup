@@ -22,8 +22,8 @@
     <!-- lang strings -->
     
     <!-- errors -->
-    <data name="ErrorNotExistingProfile" xml:space="preserve">
-        <value>The directory {0} for the backup profiles does not exist!</value>
+    <data name="ErrorNotExistingProfileDir" xml:space="preserve">
+        <value>The directory '{0}' for the backup profiles does not exist!</value>
     </data>
     <data name="StopBecauseOfError" xml:space="preserve">
         <value>The backup got stopped due to an error ...</value>
@@ -34,8 +34,24 @@
     <data name="InvalidNumber" xml:space="preserve">
         <value>Invalid input! Please choose one of the given profiles via entering the leading number!</value>
     </data>
-    <data name="InvalidProfilePath" xml:space="preserve">
-        <value>There is no valid backup profile at the given path.</value>
+    <data name="NoProfileAtPath" xml:space="preserve">
+        <value>There is no XML-file which might contain a backup profile at the path '{0}'!</value>
+    </data>
+    <data name="NoProfileAtPathHelp" xml:space="preserve">
+        <value>
+Please add a XML specifying a backup profile with the following scheme under the given path:
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;backup_profile&gt;
+    &lt;name&gt;Profile Name&lt;/name&gt;
+    &lt;backup_location&gt;
+        &lt;path&gt;/path/to_backup&lt;/path&gt;
+        &lt;dest&gt;/path/is_backup&lt;/dest&gt;
+        &lt;exclude&gt;
+            &lt;path&gt;/path/to_backup/optional_exclude&lt;/path&gt;
+        &lt;/exclude&gt;
+    &lt;/backup_location&gt;
+&lt;/backup_profile&gt;
+        </value>
     </data>
     
     <!-- xml errors -->
@@ -74,6 +90,12 @@
     </data>
     <data name="AnotherRun" xml:space="preserve">
         <value>Do you want to run another backup [y/N]</value>
+    </data>
+    <data name="OptionCancel" xml:space="preserve">
+        <value>Camcel</value>
+    </data>
+    <data name="SelectExit" xml:space="preserve">
+        <value>The program will not run a backup.</value>
     </data>
 
     <!-- backup location headline -->

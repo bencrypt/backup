@@ -22,8 +22,8 @@
     <!-- lang strings -->
 
     <!-- errors -->
-    <data name="ErrorNotExistingProfile" xml:space="preserve">
-        <value>Der Ordner {0} für die Backup-Profile existiert nicht!</value>
+    <data name="ErrorNotExistingProfileDir" xml:space="preserve">
+        <value>Der Ordner '{0}' für die Backup-Profile existiert nicht!</value>
     </data>
     <data name="StopBecauseOfError" xml:space="preserve">
         <value>Das Backup wurde aufgrund eines Fehlers abgebrochen!</value>
@@ -34,8 +34,24 @@
     <data name="InvalidNumber" xml:space="preserve">
         <value>Ungültige Eingabe! Bitte eine der angegebenen Profile durch Eingabe der vorangestellten Nummer wählen!</value>
     </data>
-    <data name="InvalidProfilePath" xml:space="preserve">
-        <value>Unter dem angegebenen Pfad konnte kein gültiges Backup-Profil gefunden werden.</value>
+    <data name="NoProfileAtPath" xml:space="preserve">
+        <value>Unter dem Pfad '{0}' existiert keine XML-Datei, die ein Backup-Profil enthalten kann!</value>
+    </data>
+    <data name="NoProfileAtPathHelp" xml:space="preserve">
+        <value>
+Zum Nutzen des Programms muss eine XML-Datei nach folgendem Schema in dem Ordner erstellt werden:
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;backup_profile&gt;
+    &lt;name&gt;Profile Name&lt;/name&gt;
+    &lt;backup_location&gt;
+        &lt;path&gt;/path/to_backup&lt;/path&gt;
+        &lt;dest&gt;/path/is_backup&lt;/dest&gt;
+        &lt;exclude&gt;
+            &lt;path&gt;/path/to_backup/optional_exclude&lt;/path&gt;
+        &lt;/exclude&gt;
+    &lt;/backup_location&gt;
+&lt;/backup_profile&gt;
+        </value>
     </data>
 
     <!-- xml errors -->
@@ -74,6 +90,12 @@
     </data>
     <data name="AnotherRun" xml:space="preserve">
         <value>Soll noch ein weiteres Backup durchgeführt werden? [j/N]</value>
+    </data>
+    <data name="OptionCancel" xml:space="preserve">
+        <value>Abbrechen</value>
+    </data>
+    <data name="SelectExit" xml:space="preserve">
+        <value>Das Programm wird kein Backup durchführen.</value>
     </data>
 
     <!-- backup location headline -->

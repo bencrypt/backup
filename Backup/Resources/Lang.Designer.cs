@@ -45,9 +45,9 @@ namespace Backup.Resources {
             }
         }
         
-        internal static string ErrorNotExistingProfile {
+        internal static string ErrorNotExistingProfileDir {
             get {
-                return ResourceManager.GetString("ErrorNotExistingProfile", resourceCulture);
+                return ResourceManager.GetString("ErrorNotExistingProfileDir", resourceCulture);
             }
         }
         
@@ -69,9 +69,15 @@ namespace Backup.Resources {
             }
         }
         
-        internal static string InvalidProfilePath {
+        internal static string NoProfileAtPath {
             get {
-                return ResourceManager.GetString("InvalidProfilePath", resourceCulture);
+                return ResourceManager.GetString("NoProfileAtPath", resourceCulture);
+            }
+        }
+        
+        internal static string NoProfileAtPathHelp {
+            get {
+                return ResourceManager.GetString("NoProfileAtPathHelp", resourceCulture);
             }
         }
         
@@ -138,6 +144,18 @@ namespace Backup.Resources {
         internal static string AnotherRun {
             get {
                 return ResourceManager.GetString("AnotherRun", resourceCulture);
+            }
+        }
+        
+        internal static string OptionCancel {
+            get {
+                return ResourceManager.GetString("OptionCancel", resourceCulture);
+            }
+        }
+        
+        internal static string SelectExit {
+            get {
+                return ResourceManager.GetString("SelectExit", resourceCulture);
             }
         }
         
