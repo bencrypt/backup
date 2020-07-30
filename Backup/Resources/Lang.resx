@@ -66,13 +66,16 @@ Please add a XML specifying a backup profile with the following scheme under the
         <value>There are missing or invalid elements in the selected backup location file!</value>
     </data>
     <data name="ErrorXmlSrc" xml:space="preserve">
-        <value>The 'src'-path is missing or invalid.</value>
-    </data>
-    <data name="ErrorXmlDest" xml:space="preserve">
-        <value>The 'dest'-path is missing or invalid.</value>
+        <value>
+The 'src'-path of the following backup location is missing or invalid:
+{0}
+        </value>
     </data>
     <data name="ErrorXmlExcludeMissingPaths" xml:space="preserve">
-        <value>The 'exclude'-element is missing 'path' sub-elements.</value>
+        <value>
+The 'exclude'-element of the following backup location is missing 'path' sub-elements:
+{0}
+        </value>
     </data>
     <data name="ErrorXmlExcludeInvalidPath" xml:space="preserve">
         <value>The 'exclude'-path '{0}' is invalid.</value>

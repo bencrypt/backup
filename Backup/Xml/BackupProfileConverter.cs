@@ -121,7 +121,8 @@ namespace Backup.Xml
 
         /// <summary>
         /// Check if the XML representation of the given backup location is valid.
-        /// Especially check if the source, destination and exclude paths are valid and existing.
+        /// Especially check if the source and exclude paths are valid and existing. Pay attention to that the
+        /// destination path does not need to be checked since it can be created first by the backup.
         /// 
         /// Returns a list with the errors that occured while checking the xml element. If no errors occured the
         /// list ist empty.
@@ -133,19 +134,13 @@ namespace Backup.Xml
             // result list, might be empty when everything is valid
             IList<string> errorMessages = new List<string>();
             
-            // check source and dest path
-            bool validPath = xmlLoc.Element("src") != null && Directory.Exists(xmlLoc.Element("src")?.Value);
-            bool validDest = xmlLoc.Element("dest") != null && Directory.Exists(xmlLoc.Element("dest")?.Value);
+            // check source path
+            bool validSrc = xmlLoc.Element("src") != null && Directory.Exists(xmlLoc.Element("src")?.Value);
 
             // add messages for invalid src and dest path into result collection if needed
-            if (!validPath)
+            if (!validSrc)
             {
-                errorMessages.Add(Lang.ErrorXmlSrc);
-            }
-            
-            if (!validDest)
-            {
-                errorMessages.Add(Lang.ErrorXmlDest);
+                errorMessages.Add(String.Format(Lang.ErrorXmlSrc, xmlLoc));
             }
 
             // check exclude paths
@@ -155,7 +150,7 @@ namespace Backup.Xml
                 if (xmlLoc.Element("exclude")?.Elements("path") == null)
                 {
                     // no paths inside exclude element
-                    errorMessages.Add(Lang.ErrorXmlExcludeMissingPaths);
+                    errorMessages.Add(String.Format(Lang.ErrorXmlExcludeMissingPaths, xmlLoc));
                 }
                 else
                 {

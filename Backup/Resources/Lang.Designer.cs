@@ -105,12 +105,6 @@ namespace Backup.Resources {
             }
         }
         
-        internal static string ErrorXmlDest {
-            get {
-                return ResourceManager.GetString("ErrorXmlDest", resourceCulture);
-            }
-        }
-        
         internal static string ErrorXmlExcludeMissingPaths {
             get {
                 return ResourceManager.GetString("ErrorXmlExcludeMissingPaths", resourceCulture);

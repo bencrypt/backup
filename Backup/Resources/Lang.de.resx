@@ -66,13 +66,16 @@ Zum Nutzen des Programms muss eine XML-Datei nach folgendem Schema in dem Ordner
         <value>Es fehlen Elemente in der gewählten BackupLocation-Datei oder sind ungültig!</value>
     </data>
     <data name="ErrorXmlSrc" xml:space="preserve">
-        <value>Der 'src'-Pfad fehlt oder ist ungültig.</value>
-    </data>
-    <data name="ErrorXmlDest" xml:space="preserve">
-        <value>Der 'dest'-Pfad fehlt oder ist ungültig.</value>
+        <value>
+Der 'src'-Pfad der folgenden Backup Location fehlt oder ist ungültig:
+{0}
+        </value>
     </data>
     <data name="ErrorXmlExcludeMissingPaths" xml:space="preserve">
-        <value>Innerhalb des 'exclude'-Elements fehlen 'path'-Elemente.</value>
+        <value>
+Das 'exclude'-Element der folgenden Backup Location hat keine 'path'-Sub-Elemente:
+{0}
+        </value>
     </data>
     <data name="ErrorXmlExcludeInvalidPath" xml:space="preserve">
         <value>Der 'exclude'-Pfad '{0}' ist ungültig.</value>
