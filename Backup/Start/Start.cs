@@ -174,7 +174,7 @@ namespace Backup.Start
         }
 
         /// <summary>
-        /// Prints an exit message in an error color and waits for a key stroke before closing the program so that
+        /// Prints an exit message in an error color and waits for ENTER before closing the program so that
         /// the window does not close immediately.
         /// </summary>
         private static void ExitAfterError()
@@ -183,12 +183,12 @@ namespace Backup.Start
             ConsoleWriter.WriteErrorMessage(Lang.EndProgram);
                     
             // wait for input until actual closing
-            Console.ReadKey();
+            Console.ReadLine();
             Environment.Exit(0);
         }
         
         /// <summary>
-        /// Prints an exit message in an non-error color and waits for a key stroke before closing the program so that
+        /// Prints an exit message in an non-error color and waits for ENTER before closing the program so that
         /// the window does not close immediately.
         /// </summary>
         private static void ExitWithoutError()
@@ -197,7 +197,7 @@ namespace Backup.Start
             ConsoleWriter.WriteMainMessage(Lang.EndProgram);
                     
             // wait for input until actual closing
-            Console.ReadKey();
+            Console.ReadLine();
             Environment.Exit(0);
         }
 
