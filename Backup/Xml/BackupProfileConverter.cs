@@ -96,7 +96,7 @@ namespace Backup.Xml
             foreach (XElement xmlLoc in xmlLocs)
             {
                 // check for errors,
-                // if any error occuss the returned list is filled with error messages
+                // if any error occurs the returned list is filled with error messages
                 IList<string> xmlValidationErrors = checkForValidXmlElements(xmlLoc);
                 
                 // print errors, return null
@@ -143,29 +143,10 @@ namespace Backup.Xml
                 errorMessages.Add(String.Format(Lang.ErrorXmlSrc, xmlLoc));
             }
 
-            // check exclude paths
-            if (xmlLoc.Element("exclude") != null)
+            // check if at least one exclude path is given when an exclude element is existing
+            if (xmlLoc.Element("exclude") != null && xmlLoc.Element("exclude")?.Elements("path") == null)
             {
-                // check if the exclude element contains valid paths
-                if (xmlLoc.Element("exclude")?.Elements("path") == null)
-                {
-                    // no paths inside exclude element
-                    errorMessages.Add(String.Format(Lang.ErrorXmlExcludeMissingPaths, xmlLoc));
-                }
-                else
-                {
-                    // check each path for validity
-                    IEnumerable<XElement> excludePaths = xmlLoc.Element("exclude").Elements("path");
-                    foreach (var excPath in excludePaths)
-                    {
-                        if (!Directory.Exists(excPath.Value))
-                        {
-                            // invalid path
-                            errorMessages.Add(string.Format(Lang.ErrorXmlExcludeInvalidPath, excPath));
-                            break;
-                        }
-                    }
-                }
+                errorMessages.Add(String.Format(Lang.ErrorXmlExcludeMissingPaths, xmlLoc));
             }
 
             // return true when all elements are valid, else false
