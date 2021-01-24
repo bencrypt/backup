@@ -71,7 +71,7 @@
             // backup all newer files from the source to the destination path if not excluded
             foreach (string srcFile in Directory.GetFiles(srcDir))
             {
-                if (!excludePaths.Contains(srcFile))
+                if (!ExcludeUtil.ShouldFileBeExcluded(srcFile, excludePaths))
                 {
                     // control message
                     //Logger.LogInfo("Check {0}", srcFile);
