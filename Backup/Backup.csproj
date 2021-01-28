@@ -2,7 +2,31 @@
 
     <PropertyGroup>
         <OutputType>Exe</OutputType>
-        <TargetFramework>netcoreapp3.1</TargetFramework>
+        <TargetFramework>net5.0</TargetFramework>
     </PropertyGroup>
+
+    <ItemGroup>
+      <EmbeddedResource Update="Resources\Lang.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>Lang.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+      <EmbeddedResource Update="Resources\Lang.de.resx">
+        <Generator>ResXFileCodeGenerator</Generator>
+        <LastGenOutput>lang.Designer.cs</LastGenOutput>
+      </EmbeddedResource>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Compile Update="Resources\Lang.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>lang.resx</DependentUpon>
+      </Compile>
+      <Compile Update="Resources\Lang.de.Designer.cs">
+        <DesignTime>True</DesignTime>
+        <AutoGen>True</AutoGen>
+        <DependentUpon>Lang.de.resx</DependentUpon>
+      </Compile>
+    </ItemGroup>
 
 </Project>

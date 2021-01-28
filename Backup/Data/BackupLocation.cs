@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Text;
 using Backup.Utils;
 
@@ -6,9 +7,17 @@ namespace Backup
 {
     public class BackupLocation
     {
-        public string Path { get; private set; }
-        public string Destination { get; private set; }
-        public IList<string> ExcludePaths { get; set; }
+        /*==================================================*
+         *==                   FIELDS                     ==*
+         *==================================================*/
+        
+        public string Path { get; }
+        public string Destination { get; }
+        public IList<string> ExcludePaths { get; }
+        
+        /*==================================================*
+         *==                CONSTRUCTORS                  ==*
+         *==================================================*/
 
         public BackupLocation(string path, string destination, IList<string> excludePaths)
         {
@@ -16,31 +25,43 @@ namespace Backup
             Destination = destination;
             ExcludePaths = excludePaths;
         }
+        
+        /*==================================================*
+         *==                 TOSTRING()                   ==*
+         *==================================================*/
 
         public override string ToString()
         {
+            // basic structure
             StringBuilder sb = new StringBuilder();
-            sb.Append("Backup-Location:\n")
+            sb.Append("BackupLocation:")
+                .Append(Environment.NewLine)
                 .Append("Path:\t'")
                 .Append(Path)
-                .Append("'\n")
-                .Append("Dest:\t'")
+                .Append("'")
+                .Append(Environment.NewLine)
+                .Append("Destination:\t'")
                 .Append(Destination)
-                .Append("'\n")
-                .Append("Excludes:\n");
+                .Append("'")
+                .Append(Environment.NewLine)
+                .Append("Excludes:")
+                .Append(Environment.NewLine);
 
+            // show exclude paths (or that there is no such path)
             foreach (string exclude in ExcludePaths)
             {
                 sb.Append("\t- '")
                     .Append(exclude)
-                    .Append("'\n");
+                    .Append("'")
+                    .Append(Environment.NewLine);
             }
 
             if (ExcludePaths.Count == 0)
             {
-                sb.Append("\t[Kein Exclude-Path angegeben]");
+                sb.Append("\t[No ExcludePath given]");
             }
             
+            // return created string
             return sb.ToString();
         }
     }

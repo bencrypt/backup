@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<root>
+    <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+        <xsd:element name="root" msdata:IsDataSet="true">
+            
+        </xsd:element>
+    </xsd:schema>
+    <resheader name="resmimetype">
+        <value>text/microsoft-resx</value>
+    </resheader>
+    <resheader name="version">
+        <value>1.3</value>
+    </resheader>
+    <resheader name="reader">
+        <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    <resheader name="writer">
+        <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=2.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+    </resheader>
+    
+    <!-- lang strings -->
+    
+    <!-- errors -->
+    <data name="ErrorNotExistingProfileDir" xml:space="preserve">
+        <value>The directory '{0}' for the backup profiles does not exist!</value>
+    </data>
+    <data name="StopBecauseOfError" xml:space="preserve">
+        <value>The backup got stopped due to an error ...</value>
+    </data>
+    <data name="ErrorMessage" xml:space="preserve">
+        <value>Error message:</value>
+    </data>
+    <data name="InvalidNumber" xml:space="preserve">
+        <value>Invalid input! Please choose one of the given profiles via entering the leading number!</value>
+    </data>
+    <data name="NoProfileAtPath" xml:space="preserve">
+        <value>There is no XML-file which might contain a backup profile at the path '{0}'!</value>
+    </data>
+    <data name="NoProfileAtPathHelp" xml:space="preserve">
+        <value>
+Please add a XML specifying a backup profile with the following scheme under the given path:
+&lt;?xml version="1.0" encoding="utf-8"?&gt;
+&lt;backup_profile&gt;
+    &lt;name&gt;Profile Name&lt;/name&gt;
+    &lt;backup_location&gt;
+        &lt;path&gt;/path/to_backup&lt;/path&gt;
+        &lt;dest&gt;/path/is_backup&lt;/dest&gt;
+        &lt;exclude&gt;
+            &lt;path&gt;/path/to_backup/optional_exclude&lt;/path&gt;
+        &lt;/exclude&gt;
+    &lt;/backup_location&gt;
+&lt;/backup_profile&gt;
+        </value>
+    </data>
+    
+    <!-- xml errors -->
+
+    <data name="ErrorXmlMissingBackupLocations" xml:space="preserve">
+        <value>The XML-file has not the outer elements '/backup_profile/backup_location'</value>
+    </data>
+    <data name="ErrorXmlMalformatted" xml:space="preserve">
+        <value>The XML-file is malformatted.</value>
+    </data>
+    <data name="ErrorXmlNodes" xml:space="preserve">
+        <value>There are missing or invalid elements in the selected backup location file!</value>
+    </data>
+    <data name="ErrorXmlSrc" xml:space="preserve">
+        <value>
+The 'src'-path of the following backup location is missing or invalid:
+{0}
+        </value>
+    </data>
+    <data name="ErrorXmlExcludeMissingPaths" xml:space="preserve">
+        <value>
+The 'exclude'-element of the following backup location is missing 'path' sub-elements:
+{0}
+        </value>
+    </data>
+    <data name="ErrorXmlExcludeInvalidPath" xml:space="preserve">
+        <value>The 'exclude'-path '{0}' is invalid.</value>
+    </data>
+    
+    <!-- start and end -->
+    <data name="Start" xml:space="preserve">
+        <value>Welcome at the Backup! Please enter the number of the backup profile you wish to run:</value>
+    </data>
+    <data name="StartBackup" xml:space="preserve">
+        <value>Start backup ...</value>
+    </data>
+    <data name="EndProgram" xml:space="preserve">
+        <value>To close the program please press [ENTER].</value>
+    </data>
+    <data name="AnotherRun" xml:space="preserve">
+        <value>Do you want to run another backup [y/N]</value>
+    </data>
+    <data name="OptionCancel" xml:space="preserve">
+        <value>Camcel</value>
+    </data>
+    <data name="SelectExit" xml:space="preserve">
+        <value>The program will not run a backup.</value>
+    </data>
+
+    <!-- backup location headline -->
+    <data name="CheckBackupLocation" xml:space="preserve">
+        <value>Check Backup Location: {0}</value>
+    </data>
+    
+    <!-- success -->
+    <data name="SuccessNoUpdate" xml:space="preserve">
+        <value>Backup successful! All files already were up-to-date.</value>
+    </data>
+    <data name="SuccessUpdate" xml:space="preserve">
+        <value>Backup successful! All files were sucessfully updated.</value>
+    </data>    
+    
+</root>

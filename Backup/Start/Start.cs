@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.IO;
-using System.Linq;
+using System.Reflection;
+using Backup.Resources;
 using Backup.Utils;
 using Backup.Xml;
 
@@ -10,118 +10,196 @@ namespace Backup.Start
 {
     class Start
     {
+        // ATTENTION: Use ConsoleWriter instead of Console.WriteLine to use Colors
+        
+        /// <summary>
+        /// Starts the backup program initiating all required actions like profile choosing, parsing and running
+        /// the backup.
+        /// </summary>
+        /// <param name="args">unused command line arguments</param>
         static void Main(string[] args)
         {
-            // ACHTUNG: ConsoleWriter nutzen anstatt direkt Console.WriteLine
+            // change to English for testing
+            //Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
 
-            // Dauerschleife, damit ggf. mehrere Durchgänge an einem Stück möglich sind
-            // => Benutzer wird nach jedem Durchgang gefragt, ob fortfahren oder beenden
-            while (true)
+            // get path of backup profiles, seen from the .exe or .sh in "../backup_profiles"
+            string scriptPath = Path.GetFullPath(Assembly.GetExecutingAssembly().Location);
+            string profileDir = Path.GetFullPath(Path.Combine(scriptPath, "..", "..", "backup_profiles"));
+
+            // check if the backup profiles directory is existing
+            // => if not so, the program can not continue
+            if (!Directory.Exists(profileDir))
             {
-                // prüfe, ob Ordner mit Backup-Profilen existiert
-                if (!Directory.Exists("../backup_profiles"))
-                {
-                    String notExisting = Path.Combine(Path.GetFullPath(".."), "backup_profiles");
-                    
-                    // Fehlermeldung
-                    ConsoleWriter.WriteWithColor("Der Ordner {0} für die Backup-Profile existiert nicht!\n", ConsoleColor.Red, notExisting);
-                        
-                    // auf Eingabe warten, damit sich das Fenster nicht sofort schließt
-                    ConsoleWriter.WriteWithColor("Zum Beenden des Programms bitte [ENTER] drücken.", ConsoleColor.Cyan);
-                    Console.ReadLine();
-                    
-                    // Programm beenden
-                    Environment.Exit(1);
-                }
-                
-                // Backup-Profil auswählen
-                BackupProfile profile = SelectBackupProfile();
+                // error message and exit
+                ConsoleWriter.WriteErrorMessage(Lang.ErrorNotExistingProfileDir, profileDir);
+                ExitAfterError();
+            }
+            
+            // choose backup profile, might be null when no one is existing or if an invalid
+            // profile is chosen
+            BackupProfile profile = SelectBackupProfile(profileDir);
 
-                // falls gültiges Profil ausgewählt, Backup durchführen
-                if (profile != null)
-                {
-                    // Nachricht
-                    ConsoleWriter.WriteWithColor("Starte Backup ...", ConsoleColor.White);
-                    
-                    // Backup
-                    try
-                    {
-                        BackupRunner.RunBackup(profile);
-                    }
-                    catch (Exception e)
-                    {
-                        // Fehlermeldung
-                        ConsoleWriter.WriteWithColor("Das Backup wurde aufgrund eines Fehlers abgebrochen!", ConsoleColor.Red);
-                        ConsoleWriter.WriteWithColor("Fehlermeldung:\n", ConsoleColor.Red);
-                        ConsoleWriter.WriteWithColor("{0}\n", ConsoleColor.Yellow, e.Message);
-                        
-                        // auf Eingabe warten, damit sich das Fenster nicht sofort schließt
-                        ConsoleWriter.WriteWithColor("Zum Beenden des Programms bitte [ENTER] drücken.", ConsoleColor.Cyan);
-                        Console.ReadLine();
-                    }
-                }
+            // run backup if valid backup file, else prepare closing the program
+            if (profile == null)
+            {
+                // invalid or not existing profile,
+                // show information for closing the program in error color
+                ExitAfterError();
                 
-                // Nachfrage, ob noch ein Backup-Durchgang
-                ConsoleWriter.WriteWithColor("Soll noch ein Backup durchgeführt werden? [j]/[N]", 
-                                             ConsoleColor.Cyan);
-                string input = Console.ReadLine();
-                if (input == null || !input.ToLower().Equals("j"))
-                {
-                    // abbrechen
-                    break;
-                }
+            } else {
+                
+                // valid profile, do backup
+                // => might exit with error when an error occurs while doing the backup
+                RunBackup(profile);
+                
+                // if reached here, the backup made fully without errors
+                ExitWithoutError();
+            }
+        }
+        
+        /// <summary>
+        /// Runs the backup basing on the given profile. The profile should be validated since this method does
+        /// rely on it.
+        /// If an error occurs while doing the backup, the backup will stop right there and an error message
+        /// will be printed.
+        /// </summary>
+        /// <param name="profile">a valid backup profile</param>
+        private static void RunBackup(BackupProfile profile)
+        {
+            // info message
+            ConsoleWriter.WriteMainMessage(Lang.StartBackup);
+                    
+            // do backup, might have errors (due to permissions etc.) that are
+            // printed out directly when occuring and cause the backup process to stop at the error's point
+            try
+            {
+                BackupRunner.RunBackup(profile);
+            }
+            catch (Exception e)
+            {
+                // error message
+                ConsoleWriter.WriteErrorMessage(Lang.StopBecauseOfError);
+                ConsoleWriter.WriteErrorMessage(Lang.ErrorMessage);
+                ConsoleWriter.WriteErrorDetails("{0}", e.Message);
+
+                // stack trace
+                //ConsoleWriter.WriteErrorDetails(e.StackTrace, ConsoleColor.Yellow);
+                        
+                // finish program
+                ExitAfterError();
             }
         }
 
-        private static BackupProfile SelectBackupProfile()
+        /// <summary>
+        /// Makes the user select interactively a backup profile from the profiles available in the given
+        /// directory. Returns the parsed backup profile if it is valid, else null.
+        /// Does or delegates all the checks needed for verifying that the selected profile is valid, like
+        /// validating the file paths.
+        /// </summary>
+        /// <param name="profileDir">the directory with the profiles</param>
+        /// <returns>a valid backup profile or null (when error)</returns>
+        private static BackupProfile SelectBackupProfile(string profileDir)
         {
-            // Start-Nachricht
-            ConsoleWriter.WriteWithColor("Willkommen beim Backup! " +
-                                         "Bitte die Zahl des auszuführenden Backup-Profils eingeben:", 
-                                         ConsoleColor.Cyan);
+            // print starting message
+            ConsoleWriter.WriteMainMessage(Lang.Start);
 
-            // alle Profile-Pfade in Liste speichern
+            // save all profile paths (xmls in profile directory) into a list
             IList<string> profilePaths = new List<string>();
-            foreach (string profile in Directory.GetFiles("../backup_profiles"))
+            foreach (string profile in Directory.GetFiles(profileDir))
             {
-                profilePaths.Add(profile);
+                if (profile.EndsWith(".xml"))
+                {
+                    profilePaths.Add(profile);
+                }
             }
             
-            // alle Profile zur Auswahl anbieten
+            // check if there are profiles to select
+            // => if not so inform the user and return null
+            if (profilePaths.Count == 0)
+            {
+                ConsoleWriter.WriteErrorMessage(Lang.NoProfileAtPath, profileDir);
+                ConsoleWriter.WriteErrorDetails(Lang.NoProfileAtPathHelp);
+                return null;
+            }
+            
+            // make all profile paths selectable by the user through entering a corresponding number
             for (int option = 1; option <= profilePaths.Count; option++)
             {
-                ConsoleWriter.WriteWithColor("[{0}]: {1}", ConsoleColor.Cyan, 
-                                             option, Path.GetFileNameWithoutExtension(profilePaths[option-1]));
+                ConsoleWriter.WriteMainMessage("[{0}]: {1}", option, Path.GetFileNameWithoutExtension(profilePaths[option-1]));
             }
+            
+            // add option to close the program without running a backup
+            ConsoleWriter.WriteMainMessage("[0]: {0}", Lang.OptionCancel);
+            
 
-            // Auswahl verarbeiten und (falls gültig) Profil laden
-            // => solange durchführen, bis gültige Auswahl
+            // check input and load profile when it is valid
+            // => repeat until there is valid input
+            BackupProfileConverter profileConverter = new BackupProfileConverter();
             int input = -1;
+            
             while (input == -1)
             {
-                // Input entgegennehmen
+                // take input
                 bool parsed = int.TryParse(Console.ReadLine(), out input);
+                
+                // handle exit input
+                if (parsed && input == 0)
+                {
+                    // repeat selection as information
+                    ConsoleWriter.WriteMainMessage(Lang.SelectExit);
+                    
+                    // close
+                    ExitWithoutError();
+                }
+                
+                // check non-exit input for valid selection of a backup profile
                 if (!parsed || input <= 0 || input > profilePaths.Count)
                 {
-                    // Fehlermeldung
-                    ConsoleWriter.WriteWithColor("Ungültige Eingabe! Bitte eine der angegebenen Profile durch " +
-                                                 "Eingabe der vorangestellten Nummer wählen!", ConsoleColor.Red);
+                    // error message because of invalid input
+                    ConsoleWriter.WriteErrorMessage(Lang.InvalidNumber);
                     
-                    // Input zurück auf -1 setzen
+                    // reset input on -1 for taking another loop run
                     input = -1;
                 }
                 else
                 {
-                    // (gültiges) Profil erstellen und zurückgeben
-                    return BackupProfileConverter.LoadBackupProfile(profilePaths[input - 1]);
+                    // valid input, return backup profile
+                    return profileConverter.LoadBackupProfile(profilePaths[input - 1]);
                 }
             }
 
-            // pro-forma null zurückgeben, was aber gar nicht erreicht wird, da 
-            // oben immer auf eine gültige Eingabe gewartet wird
+            // return null due to compiler checking, is never reached since the loop aboves
+            // repeats until there is a valid input for continuing the program
             return null;
         }
 
+        /// <summary>
+        /// Prints an exit message in an error color and waits for ENTER before closing the program so that
+        /// the window does not close immediately.
+        /// </summary>
+        private static void ExitAfterError()
+        {
+            // exit message with error color
+            ConsoleWriter.WriteErrorMessage(Lang.EndProgram);
+                    
+            // wait for input until actual closing
+            Console.ReadLine();
+            Environment.Exit(0);
+        }
         
+        /// <summary>
+        /// Prints an exit message in an non-error color and waits for ENTER before closing the program so that
+        /// the window does not close immediately.
+        /// </summary>
+        private static void ExitWithoutError()
+        {
+            // exit message with non-error color
+            ConsoleWriter.WriteMainMessage(Lang.EndProgram);
+                    
+            // wait for input until actual closing
+            Console.ReadLine();
+            Environment.Exit(0);
+        }
+
     }
 }

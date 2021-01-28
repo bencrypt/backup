@@ -1,179 +1,240 @@
-﻿﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using Backup.Utils;
+﻿﻿using System.Collections.Generic;
+ using System.IO;
+ using Backup.Resources;
+ using Backup.Utils;
 
-namespace Backup.Start
+ namespace Backup.Start
 {
     public class BackupRunner
     {
+        /// <summary>
+        /// Initiates the actual backup specified by the given backup profile. This includes adding new files/dirs,
+        /// updating existing but newer files, removing not (anymore) existing files and directories.
+        /// Writes on the console when the backup has finished successfully. Might throw errors which needs to be
+        /// captured from the caller of this method.
+        /// </summary>
+        /// <param name="profile">the backup profile to run</param>
         public static void RunBackup(BackupProfile profile)
         {
-            // sichere nacheinander die einzelnen BackupLocations
+            // go through all BackupLocations in the BackupProfile to backup them
             bool atLeastOneNewer = false;
             foreach (BackupLocation backupLocation in profile.BackupLocations)
             {
-                // Backup rekursiv für alle Verzeichnisse durchführen
-                // => der Rückgabewert gibt an, ob mindestens eine Datei aktualisiert wurde
+                // backup each directory recursively
+                // => the return value marks if at least one file was updated (for better output to the user)
+                ConsoleWriter.WriteBackupLocationHeadline(Lang.CheckBackupLocation, backupLocation.Path);
                 bool updated = BackupDirectoryRecursively(
-                                        backupLocation.Path, backupLocation.Destination, backupLocation.ExcludePaths);
+                        backupLocation, backupLocation.Path, backupLocation.Destination, backupLocation.ExcludePaths);
 
-                // Informations-Flag für mindestens eine aktualisierte Datei setzen, falls noch nicht getan
+                // set return flag if an file was changed and the flag is not yet set
                 if (!atLeastOneNewer && updated)
                 {
                     atLeastOneNewer = true;
                 }
             }
 
-            // Kontroll-Nachricht am Ende des Backups
+            // output to the user after the backup (informs wheter there was something updated or not)
             if (!atLeastOneNewer)
             {
-                ConsoleWriter.WriteWithColor("Backup durchgeführt! Alle Dateien waren bereits aktuell.", 
-                                             ConsoleColor.Green);
+                ConsoleWriter.WriteSuccessMessage(Lang.SuccessNoUpdate);
             }
             else
             {
-                ConsoleWriter.WriteWithColor("Backup durchgeführt! Alle Dateien wurden auf den aktuellen Stand gebracht.",
-                                             ConsoleColor.Green);
+                ConsoleWriter.WriteSuccessMessage(Lang.SuccessUpdate);
             }
         }
 
-        private static bool BackupDirectoryRecursively(string srcDir, string destDir, IList<string> excludePaths)
+        /// <summary>
+        /// Mirrors the given source directory to the given destination directory. This means new files are added,
+        /// not anymore existing files at the source will be deleted at the destination and newer files or
+        /// subdirectories are updated. Returns true when at least one modification was done, else false.
+        /// </summary>
+        /// <param name="backupLocation">the backup location for which the backup is run</param>
+        /// <param name="srcDir">the source directory to be mirrored</param>
+        /// <param name="destDir">the destination directory to contain the backup</param>
+        /// <param name="excludePaths">maybe defined exclude paths which are not to consider when doing the backup</param>
+        /// <returns>true when modifications, else false</returns>
+        private static bool BackupDirectoryRecursively(BackupLocation backupLocation, string srcDir, string destDir,
+            IList<string> excludePaths)
         {
-            // Ergebnis-Flag
-            // => true, falls mindestens eine Datei oder ein Ordner aktualisiert/hinzugefügt/entfernt
-            bool atLeastOneNewer = false;
+            // return flag
+            // => true, if at least one file or folder was updated/added/removed
+            bool atLeastOneUpdated = false;
             
-            // erstelle das Zielverzeichnis, falls notwendig
+            // create the destination directory if it does not yet exist
             if (!Directory.Exists(destDir))
             {
                 Directory.CreateDirectory(destDir);
-                atLeastOneNewer = true;
+                atLeastOneUpdated = true;
             }
 
-            // sichere alle neueren Dateien aus dem Quellverzeichnis ins Zielverzeichnis,
-            // falls nicht excluded
+            // backup all newer files from the source to the destination path if not excluded
             foreach (string srcFile in Directory.GetFiles(srcDir))
             {
-                if (!excludePaths.Contains(srcFile))
+                if (!ExcludeUtil.ShouldFileBeExcluded(srcFile, excludePaths))
                 {
-                    // Kontroll-Nachricht
-                    //Logger.LogInfo("Überprüfe {0}", srcFile);
+                    // control message
+                    //Logger.LogInfo("Check {0}", srcFile);
                     
-                    // Dateien sichern
-                    bool saved = BackupFileIfNewer(srcFile, destDir);
+                    // backup
+                    bool saved = BackupFileIfNewer(backupLocation, srcFile, destDir);
 
-                    // falls mindestens eine Datei aktualisiert => Flag auf true setzen
-                    if (!atLeastOneNewer && saved)
+                    // update change-flag if necessary
+                    if (!atLeastOneUpdated && saved)
                     {
-                        atLeastOneNewer = true;
+                        atLeastOneUpdated = true;
                     }
                 }
             }
             
-            // alle nicht mehr vorhandenen Dateien und Ordner löschen
-            bool atLeastOneDeleted = DeleteFilesAndSubdirsNotContainedAnymore(srcDir, destDir);
+            // remove all files and directories that are no longer contained at the source path
+            bool atLeastOneDeleted = DeleteFilesAndSubdirsNotContainedAnymore(backupLocation, srcDir, destDir);
             
-            // Ergebnis-Flag aktualisieren
-            if (!atLeastOneNewer && atLeastOneDeleted)
+            // update change-flag
+            if (!atLeastOneUpdated && atLeastOneDeleted)
             {
-                atLeastOneNewer = true;
+                atLeastOneUpdated = true;
             }
 
-            // gehe alle Sub-Verzeichnisse durch, falls nicht excluded
+            // repeat backup at all sub directories if not excluded
             foreach (string subDir in Directory.GetDirectories(srcDir))
             {
                 if (!excludePaths.Contains(subDir))
                 {
-                    // kombiniere das Zielverzeichnis mit dem Sub-Ordner-Namen (als FileName abfragen!)
-                    // => Backup-Pfad für den Sub-Ordner
+                    // combine destination path with sub directory name (must be got as file name!)
+                    // => backup path for sub folder
                     string destOfSubDir = Path.Combine(destDir, Path.GetFileName(subDir));
                     
-                    // sichere das Sub-Verzeichnis
-                    bool atLeastOneNewerInSubDir = BackupDirectoryRecursively(subDir, destOfSubDir, excludePaths);
+                    // backup the sub directory
+                    bool atLeastOneNewerInSubDir = BackupDirectoryRecursively(
+                                                        backupLocation, subDir, destOfSubDir, excludePaths);
                     
-                    // Ergebnis-Flag aktualisieren
-                    if (!atLeastOneNewer && atLeastOneNewerInSubDir)
+                    // update change-flag if necessary
+                    if (!atLeastOneUpdated && atLeastOneNewerInSubDir)
                     {
-                        atLeastOneNewer = true;
+                        atLeastOneUpdated = true;
                     }
                 }
             }
             
-            // gebe zurück, ob mindestens eine Datei aktualisiert wurde
-            return (atLeastOneNewer || atLeastOneDeleted);
+            // return if at least one file/folder was updated
+            return (atLeastOneUpdated);
         }
 
-        private static bool BackupFileIfNewer(string srcFile, string destDir)
+        /// <summary>
+        /// Mirrors the given source file to the given destination file. This means new files are added
+        /// and newer files are updated.
+        /// Returns true when at least one modification was done, else false.
+        /// </summary>
+        /// <param name="backupLocation">the backup location for which the backup is run</param>
+        /// <param name="srcFile">the source file to be mirrored</param>
+        /// <param name="destDir">the destination file to contain the backup</param>
+        /// <returns>true when modifications, else false</returns>
+        private static bool BackupFileIfNewer(BackupLocation backupLocation, string srcFile, string destDir)
         {
-            // kombiniere das Zielverzeichnis mit dem Dateinamen
-            // => Backup-Pfad für die Datei
+            // get the file path without the path given in the BackupLocation
+            // => that shortens the path for a clearer output to the user
+            string pathWithoutLocationPrefix = srcFile.Remove(0, backupLocation.Path.Length);
+            
+            // combine the destination directory with the file name
+            // => backup path for the file
             string destOfFile = Path.Combine(destDir, Path.GetFileName(srcFile));
             
-            // sichere die Datei, falls noch nicht vorhanden oder neuer
+            // backup the file if not existing yet
             if (!File.Exists(destOfFile))
             {
-                // Kontroll-Nachricht
-                ConsoleWriter.WriteWithColor("Neu erstellte Datei '{0}'", ConsoleColor.White, srcFile, destOfFile);
+                // output to user
+                ConsoleWriter.WriteBackupAddition(pathWithoutLocationPrefix);
 
-                // Datei sichern
+                // backup
                 File.Copy(srcFile, destOfFile, true);
                 
-                // true zurückgeben, da Datei neu hinzugefügt
+                // return true because a new file was added
                 return true;
             }
-            else if (File.GetLastWriteTime(srcFile) > File.GetLastWriteTime(destOfFile))
+            
+            // backup the file if newer on source path than in destination path
+            if (File.GetLastWriteTime(srcFile) > File.GetLastWriteTime(destOfFile))
             {
-                // Kontroll-Nachricht
-                //Logger.LogInfo("Sichere:\n{0}\n=> {1}", srcFile, destOfFile);
-                ConsoleWriter.WriteWithColor("Aktualisierte Datei '{0}'", ConsoleColor.White, srcFile, destOfFile);
+                // control message
+                //Logger.LogInfo("Backup: {0} => {1}", srcFile, destOfFile);
                 
-                // Ziel-Datei (falls schon vorhanden) als "normal" markieren, damit sie überschrieben werden kann
-                // (z.B. sind git-Dateien schreibgeschützt, weshalb dieser Schritt vor dem Überschreiben
-                //  notwendig ist)
+                // user output, show only the part of the source path after the BackupLocation-path for
+                // a clearer output
+                ConsoleWriter.WriteBackupUpdate(pathWithoutLocationPrefix);
+                
+                // if the destination part already exists and is readonly, mark it as writeable so that it
+                // can be removed
+                // => e.g. needed for git-files since they are read-only
                 if (File.Exists(destOfFile))
                 {
-                    File.SetAttributes(destOfFile, FileAttributes.Normal);
+                    FileInfo destFileInfo = new FileInfo(destOfFile);
+                    if (destFileInfo.IsReadOnly)
+                    {
+                        new FileInfo(destOfFile).IsReadOnly = false;
+                        //File.SetAttributes(destOfFile, FileAttributes.Normal);
+                    }
                 }
                 
-                // Datei sichern
+                // backup
                 File.Copy(srcFile, destOfFile, true);
                 
-                // true zurückgeben, da aktuellere Datei gesichert
+                // return true because newer file
                 return true;
             }
 
-            // false zurückgeben, da keine aktuellere Datei gesichert werden musste
+            // false because no newer file
             return false;
         }
 
-        private static bool DeleteFilesAndSubdirsNotContainedAnymore(string srcDir, string destDir)
+        /// <summary>
+        /// Deletes files and subdirectories contained in the destination directory but not contained in the given
+        /// source directory.
+        /// Returns true when at least one modification was done, else false.
+        /// </summary>
+        /// <param name="backupLocation">the backup location for which the backup is run</param>
+        /// <param name="srcDir">the source directory to be mirrored</param>
+        /// <param name="destDir">the destination directory to contain the backup</param>
+        /// <returns>true when modifications, else false</returns>
+        private static bool DeleteFilesAndSubdirsNotContainedAnymore(BackupLocation backupLocation, string srcDir, string destDir)
         {
-            // Ergebnis-Flag
+            // result flag
+            // => true if at least one change had been made
             bool atLeastOneDeleted = false;
             
-            // lösche alle Dateien im Zielverzeichnis, die nicht (mehr) im Quellverzeichnis
-            // existieren
+            // delete all files in the destination directory which are not (any more) in the source directory
             foreach (string destFile in Directory.GetFiles(destDir))
             {
-                // ursprünglichen Quellpfad ermitteln
+                // determine the source path of each file in the destination path to check whether
+                // the file exists on the source path
                 string shouldBeSrcFile = Path.Combine(srcDir, Path.GetFileName(destFile));
                 
-                // lösche die Zieldatei, falls keine Datei (mehr) unter Quellpfad
+                // get the file path without the path given in the BackupLocation
+                // => that shortens the path for a clearer output to the user
+                string pathWithoutLocationPrefix = shouldBeSrcFile.Remove(0, backupLocation.Path.Length);
+                
+                // remove the file in the destination path if there is no corresponding file in the source path
                 if (!File.Exists(shouldBeSrcFile))
                 {
-                    // Kontroll-Nachricht
-                    //Logger.LogInfo("Gelöschte Datei: {0}", shouldBeSrcFile);
-                    ConsoleWriter.WriteWithColor("Gelöschte Datei '{0}'", ConsoleColor.White, shouldBeSrcFile);
+                    // control message
+                    //Logger.LogInfo("Deleted: {0}", shouldBeSrcFile);
                     
-                    // Dateiattribute auf "normal" setzen, damit die Datei gelöscht werden kann
-                    // => z.B. sind einige git-Dateien read-only, weshalb man sie sonst nicht löschen kann
-                    File.SetAttributes(destFile, FileAttributes.Normal);
+                    // output for user
+                    ConsoleWriter.WriteBackupRemove(pathWithoutLocationPrefix);
                     
-                    // Datei löschen
+                    // mark the destination file as writeable if it is readonly so that it can be removed
+                    // => e.g. needed for git-files since they are read-only
+                    FileInfo destFileInfo = new FileInfo(destFile);
+                    if (destFileInfo.IsReadOnly)
+                    {
+                        new FileInfo(destFile).IsReadOnly = false;
+                        //File.SetAttributes(destOfFile, FileAttributes.Normal);
+                    }
+                    
+                    // remove file
                     File.Delete(destFile);
                     
-                    // Ergebnis-Flag aktualisieren
+                    // update change-flag
                     if (!atLeastOneDeleted)
                     {
                         atLeastOneDeleted = true;
@@ -181,25 +242,31 @@ namespace Backup.Start
                 }
             }
             
-            // lösche alle Sub-Verzeichnisse im Zielverzeichnis, die nicht (mehr) im Quellverzeichnis
-            // existieren
+            // remove all sub directories in the destination path which do not (any more) exist at the source path
             foreach (string destSubDir in Directory.GetDirectories(destDir))
             {
-                // ursprünglichen Quellpfad ermitteln
+                // determine the source path of each sub directory in the destination path to check whether
+                // the sub directory exists on the source path (needs to be asked as file name!)
                 string shouldBeSrcDir = Path.Combine(srcDir, Path.GetFileName(destSubDir));
                 
-                // lösche die Zieldatei, falls kein Verzeichnis (mehr) unter Quellpfad
+                // get the sub directory path without the path given in the BackupLocation
+                // => that shortens the path for a clearer output to the user
+                string pathWithoutLocationPrefix = shouldBeSrcDir.Remove(0, backupLocation.Path.Length);
+                
+                // remove the sub directory if there is no corresponding sub directory at the source path
                 if (!Directory.Exists(shouldBeSrcDir))
                 {
-                    // Kontroll-Nachricht
-                    //Logger.LogInfo("Gelöschtes Verzeichnis: {0}", shouldBeSrcDir);
-                    ConsoleWriter.WriteWithColor("Gelöschtes Verzeichnis '{0}'", ConsoleColor.White, shouldBeSrcDir);
+                    // control message
+                    //Logger.LogInfo("Removed sub dir: {0}", shouldBeSrcDir);
                     
-                    // Verzeichnis rekursiv löschen
-                    // => eigene Methode, da ggf. Datei-Attribute geändert werden müssen
+                    // output to user
+                    ConsoleWriter.WriteBackupRemove(pathWithoutLocationPrefix);
+                    
+                    // delete this sub directory recursively
+                    // => own method because read only attributes might be changed
                     DeleteDirectoryRecursively(destSubDir);
                     
-                    // Ergebnis-Flag aktualisieren
+                    // update change-flag
                     if (!atLeastOneDeleted)
                     {
                         atLeastOneDeleted = true;
@@ -207,35 +274,43 @@ namespace Backup.Start
                 }
             }
             
-            // Ergebnis-Flag zurückgeben
+            // return the change flag
+            // => true if some file or folder was updated
             return atLeastOneDeleted;
         }
 
+        /// <summary>
+        /// Deletes the given directory recursively. Forces this deletion with removing a probably readonly
+        /// attribute.
+        /// </summary>
+        /// <param name="destDir">the directory to be deleted recursively</param>
         private static void DeleteDirectoryRecursively(string destDir)
         {
-            // Verzeichnis-Attribute auf "normal" setzen, damit das Verzeichnis am Ende der Methode
-            // gelöscht werden kann
-            DirectoryInfo directoryInfo = new DirectoryInfo(destDir)
+            // set directory attributes to "normal" so that the directory can be deleted at the end
+            // of the method
+            DirectoryInfo directoryInfo = new DirectoryInfo(destDir);
+            if ((directoryInfo.Attributes & FileAttributes.ReadOnly) != 0)
             {
-                Attributes = FileAttributes.Normal
-            };
-            
-            // Dateiattribute jeder Datei auf "normal" setzen, damit die Datei gelöscht werden kann, und
-            // anschließend die Datei löschen
-            // => z.B. sind einige git-Dateien read-only, weshalb man sie sonst nicht löschen kann
+                directoryInfo.Attributes &= ~FileAttributes.ReadOnly;
+            }
+
+            // mark the file as writeable if it is readonly so that it can be removed
+            // => e.g. needed for git-files since they are read-only
             foreach (string file in Directory.GetFiles(destDir))
             {
-                File.SetAttributes(file, FileAttributes.Normal);
+                FileInfo fileInfo = new FileInfo(file);
+                fileInfo.IsReadOnly = false;
+                //File.SetAttributes(file, FileAttributes.Normal);
                 File.Delete(file);
             }
             
-            // in jedem Sub-Verzeichnis wiederholen
+            // repeat in each sub directory recursively
             foreach (string subDir in Directory.GetDirectories(destDir))
             {
                 DeleteDirectoryRecursively(subDir);
             }
             
-            // Verzeichnis selbst löschen
+            // delete the (now empty) directory itself
             directoryInfo.Delete();
         }
     }
