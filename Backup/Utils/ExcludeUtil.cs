@@ -52,5 +52,49 @@ namespace Backup.Utils
             // file extension should not be ignored
             return false;
         }
+
+        public static bool ShouldDirectoryBeExcluded(string dirPath, IList<string> excludePaths)
+        {
+            // full path is listed in exclude paths
+            if (excludePaths.Contains(dirPath))
+            {
+                return true;
+            }
+
+            // directory is listed via wildcard in exclude paths
+            if (ExcludeUtil.ContainsExcludedDirectoryWildcard(dirPath, excludePaths))
+            {
+                return true;
+            }
+            
+            // none of the above exclude checks did pass, thus the directory should not be excluded
+            return false;
+        }
+        
+        private static bool ContainsExcludedDirectoryWildcard(string dirPath, IList<string> excludePaths)
+        {
+            Logger.LogInfo("Check dir: {0}", dirPath);
+            // go through each exclude path definition
+            foreach (string excludePath in excludePaths)
+            {
+                // "*/<dir>/*" in excludePath shows that a the sub dir <dir> should be ignored
+                if (excludePath.StartsWith("*/") && excludePath.EndsWith("/*"))
+                {
+                    // everything between the first star and the suffix "/*" should be checked against the dir path;
+                    // example: the current path might be "<parent>/exclude" and the wildcard for excluding this dir
+                    //          would be "*/exclude/*" then, so ends with "/exclude" has to be checked
+                    int lengthForDirectoryNameAndLeadingBackslash = excludePath.Length - 3;
+                    string excludeDir = excludePath.Substring(1, lengthForDirectoryNameAndLeadingBackslash);
+                    if (dirPath.EndsWith(excludeDir))
+                    {
+                        Logger.LogInfo("Exclude directory because of wildcard: {0}", dirPath);
+                        return true;
+                    }
+                }
+            }
+
+            // file extension should not be ignored
+            return false;
+        }
     }
 }

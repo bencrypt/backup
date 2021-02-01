@@ -99,7 +99,7 @@
             // repeat backup at all sub directories if not excluded
             foreach (string subDir in Directory.GetDirectories(srcDir))
             {
-                if (!excludePaths.Contains(subDir))
+                if (!ExcludeUtil.ShouldDirectoryBeExcluded(subDir, excludePaths))
                 {
                     // combine destination path with sub directory name (must be got as file name!)
                     // => backup path for sub folder
