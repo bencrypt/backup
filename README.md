@@ -51,6 +51,33 @@ If no path should be excluded, the whole _exclude_ entry has to be omitted.
 In this example the directory _/home/user/to_backup_ is backed up to _/media/user/device/is\_backup_. The sub directory _do\_not\_backup_
 however is not copied during the backup because it is marked as an excluded path.
 
+## Wildcards
+
+You can use wildcards for excluding multiple files or directories with configurin only one exclude path.
+Currently the following wildcards are allowed:
+
+|  wildcard pattern  |                                meaning                                     |                          example                                       |
+|         :---:      |                                  ---                                       |                            ---                                         |
+| \*._\<ext\>_       | exclude all files with the given file extension                            | _\*/.class_ for excluding all files with _.class_ extension            |
+| \*/_\<dir\>_/\*    | exclude all sub directories inside the backup location with the given name | _\*/node_modules/\*_ for excluding all _node\_modules_ sub directories |
+
+The following file shows how to use the example wildcards from the table above inside an actual backup profile:
+
+```xml
+<?xml version="1.0" encoding="utf-8"?>
+<backup_profile>
+    <name>My Backup Profile</name>
+    <backup_location>
+        <src>/home/user/to_backup</src>
+        <dest>/media/user/device/is_backup</dest>
+        <exclude>
+            <path>*.class</path>
+            <path>*/node_modules/*</path>
+        </exclude>
+    </backup_location>
+</backup_profile>
+```
+
 # Structure
 
 The `Start` class inside the `Start` namespace marks the entry point for the application. 
