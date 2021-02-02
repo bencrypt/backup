@@ -29,8 +29,7 @@ namespace Backup.Utils
         }
 
         /// <summary>
-        /// Returns true if the given file has an extension that should be excluded. Else returns false because
-        /// the file extension should not be excluded.
+        /// Returns true if the given file has an extension that should be excluded, else false.
         /// </summary>
         /// <param name="filePath">the file path to check</param>
         /// <param name="excludePaths">all exclude paths (path entries like "*.extension" is checked here)</param>
@@ -53,6 +52,12 @@ namespace Backup.Utils
             return false;
         }
 
+        /// <summary>
+        /// Returns true if the given directory should be excluded from the backup, else false.
+        /// </summary>
+        /// <param name="dirPath">the directory path to check</param>
+        /// <param name="excludePaths">all exclude paths of the current used backup profile</param>
+        /// <returns>true if the directory should be excluded, else false</returns>
         public static bool ShouldDirectoryBeExcluded(string dirPath, IList<string> excludePaths)
         {
             // full path is listed in exclude paths
@@ -71,9 +76,16 @@ namespace Backup.Utils
             return false;
         }
         
+        /// <summary>
+        /// Returns true if the given directory should be excluded, else false.
+        /// </summary>
+        /// <param name="dirPath">the directory path to check</param>
+        /// <param name="excludePaths">all exclude paths (path entries like "*/dir/*" is checked here)</param>
+        /// <returns>true if the directory should be excluded, else false</returns>
         private static bool ContainsExcludedDirectoryWildcard(string dirPath, IList<string> excludePaths)
         {
-            Logger.LogInfo("Check dir: {0}", dirPath);
+            //Logger.LogInfo("Check dir: {0}", dirPath);
+            
             // go through each exclude path definition
             foreach (string excludePath in excludePaths)
             {
@@ -87,7 +99,7 @@ namespace Backup.Utils
                     string excludeDir = excludePath.Substring(1, lengthForDirectoryNameAndLeadingBackslash);
                     if (dirPath.EndsWith(excludeDir))
                     {
-                        Logger.LogInfo("Exclude directory because of wildcard: {0}", dirPath);
+                        //Logger.LogInfo("Exclude directory because of wildcard: {0}", dirPath);
                         return true;
                     }
                 }
