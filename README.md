@@ -37,7 +37,6 @@ If no path should be excluded, the whole _exclude_ entry has to be omitted.
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <backup_profile>
-    <name>My Backup Profile</name>
     <backup_location>
         <src>/home/user/to_backup</src>
         <dest>/media/user/device/is_backup</dest>
@@ -53,7 +52,7 @@ however is not copied during the backup because it is marked as an excluded path
 
 ## Wildcards
 
-You can use wildcards for excluding multiple files or directories with configurin only one exclude path.
+You can use wildcards for excluding multiple files or directories with configuring only one exclude path.
 Currently the following wildcards are allowed:
 
 |  wildcard pattern  |                                meaning                                     |                          example                                       |
@@ -66,7 +65,6 @@ The following file shows how to use the example wildcards from the table above i
 ```xml
 <?xml version="1.0" encoding="utf-8"?>
 <backup_profile>
-    <name>My Backup Profile</name>
     <backup_location>
         <src>/home/user/to_backup</src>
         <dest>/media/user/device/is_backup</dest>
