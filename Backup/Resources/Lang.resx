@@ -95,7 +95,7 @@ The 'exclude'-element of the following backup location is missing 'path' sub-ele
         <value>Do you want to run another backup [y/N]</value>
     </data>
     <data name="OptionCancel" xml:space="preserve">
-        <value>Camcel</value>
+        <value>Cancel</value>
     </data>
     <data name="SelectExit" xml:space="preserve">
         <value>The program will not run a backup.</value>
@@ -111,7 +111,7 @@ The 'exclude'-element of the following backup location is missing 'path' sub-ele
         <value>Backup successful! All files already were up-to-date.</value>
     </data>
     <data name="SuccessUpdate" xml:space="preserve">
-        <value>Backup successful! All files were sucessfully updated.</value>
+        <value>Backup successful! All files were successfully updated.</value>
     </data>    
     
 </root>
