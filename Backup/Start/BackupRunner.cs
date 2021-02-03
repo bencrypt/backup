@@ -1,9 +1,9 @@
-﻿﻿using System.Collections.Generic;
- using System.IO;
- using Backup.Resources;
- using Backup.Utils;
+﻿using System.Collections.Generic;
+using System.IO;
+using Backup.Resources;
+using Backup.Utils;
 
- namespace Backup.Start
+namespace Backup.Start
 {
     public class BackupRunner
     {
