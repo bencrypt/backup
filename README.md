@@ -1,9 +1,15 @@
-# Introduction
+# Backup
+
+## Introduction
 
 This console application lets the user backup directories via mirroring them to another path.
 The destination directory might be located on another connected device.
 
-# Configuration
+## Screenshot
+
+![Screenshot](Screenshot.png)
+
+## Configuration
 
 The configuration of the backup is done via XML files. 
 Those files must be placed inside the directory _backup\_profiles_. 
@@ -50,7 +56,7 @@ If no path should be excluded, the whole _exclude_ entry has to be omitted.
 In this example the directory _/home/user/to_backup_ is backed up to _/media/user/device/is\_backup_. The sub directory _do\_not\_backup_
 however is not copied during the backup because it is marked as an excluded path.
 
-## Wildcards
+### Wildcards
 
 You can use wildcards for excluding multiple files or directories with configuring only one exclude path.
 Currently the following wildcards are allowed:
@@ -76,7 +82,7 @@ The following file shows how to use the example wildcards from the table above i
 </backup_profile>
 ```
 
-# Structure
+## Structure
 
 The `Start` class inside the `Start` namespace marks the entry point for the application. 
 This class is responsible for reading the backup profiles and starting the backup. 
@@ -89,7 +95,7 @@ This converter is responsible for creating the objects of the types `BackupProfi
 `Data` package. 
 Note that an object of the type `BackupLocation` corresponds to a directory that should be backed up.
 
-# Build and use the application
+## Build and use the application
 
 1. Publish for the desired platform (Linux and Windows tested, Mac should also work)
 2. If not published as 'Self-contained' install the .NET 5 runtime on the device
