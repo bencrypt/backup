@@ -83,10 +83,16 @@ The 'exclude'-element of the following backup location is missing 'path' sub-ele
     
     <!-- start and end -->
     <data name="Start" xml:space="preserve">
-        <value>Welcome at the Backup! Please enter the number of the backup profile you wish to run:</value>
+        <value>Welcome at the Backup! Please enter the number of the backup profile you wish to run.</value>
+    </data>
+    <data name="DryRunInfo" xml:space="preserve">
+        <value>If you add the flag '--dry' after the number (e.g. '1 --dry') the changes which would be made by the backup will only be shown but not performed.</value>
     </data>
     <data name="StartBackup" xml:space="preserve">
         <value>Start backup ...</value>
+    </data>
+    <data name="DoDryRun" xml:space="preserve">
+        <value>This is a dry run so that the shown changes are NOT performed in real. Use the output to check whether the chosen backup profile works as expected.</value>
     </data>
     <data name="EndProgram" xml:space="preserve">
         <value>To close the program please press [ENTER].</value>
@@ -112,6 +118,9 @@ The 'exclude'-element of the following backup location is missing 'path' sub-ele
     </data>
     <data name="SuccessUpdate" xml:space="preserve">
         <value>Backup successful! All files were successfully updated.</value>
-    </data>    
-    
+    </data>
+    <data name="SuccessDryRun" xml:space="preserve">
+        <value>Dry run successful! Note that the changes listed above (if existing) are visual only. No real change had been made due to the dry run.</value>
+    </data>
+
 </root>

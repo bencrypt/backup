@@ -103,7 +103,11 @@ Note that an object of the type `BackupLocation` corresponds to a directory that
 4. Create one or more backup profiles (.xml files, structure see in chapter 'Configuration')
 5. Start the application (Linux: Backup, Windows: Backup.exe)
 6. Choose one of the backup profiles (the number displayed inside the square brackets 
-   (e.g. press _1_ and _Return_ afterwards for selecting the profile with the prefix '\[1\]'))
+   (e.g. enter _1_ and then press _Return_ for selecting the profile with the prefix '\[1\]'))
+     
+**Dry runs:**
+You can use the flag '--dry' (e.g. enter _1 --dry_, then press _Return_) to get displayed all the changes that would be made by the chosen backup profile without actually performing any of this changes.
+This is a good way to check what changes will be made by running a backup profile before using it to backup real data.
 
 **Attention:** 
 The backup run will exactly create a copy of the source directory at the destination path.

@@ -51,7 +51,7 @@ namespace Backup.Start
                 // valid profile, do backup
                 // => might exit with error when an error occurs while doing the backup
                 RunBackup(profile);
-                
+
                 // if reached here, the backup made fully without errors
                 ExitWithoutError();
             }
@@ -68,6 +68,12 @@ namespace Backup.Start
         {
             // info message
             ConsoleWriter.WriteMainMessage(Lang.StartBackup);
+            
+            // additional info message if a dry run is executed
+            if (profile.DryRun)
+            {
+                ConsoleWriter.WriteMainMessage(Lang.DoDryRun);
+            }
                     
             // do backup, might have errors (due to permissions etc.) that are
             // printed out directly when occuring and cause the backup process to stop at the error's point
@@ -83,7 +89,7 @@ namespace Backup.Start
                 ConsoleWriter.WriteErrorDetails("{0}", e.Message);
 
                 // stack trace
-                //ConsoleWriter.WriteErrorDetails(e.StackTrace, ConsoleColor.Yellow);
+                ConsoleWriter.WriteErrorDetails(e.StackTrace, ConsoleColor.Yellow);
                         
                 // finish program
                 ExitAfterError();
@@ -102,6 +108,7 @@ namespace Backup.Start
         {
             // print starting message
             ConsoleWriter.WriteMainMessage(Lang.Start);
+            ConsoleWriter.WriteMainMessage(Lang.DryRunInfo);
 
             // save all profile paths (xmls in profile directory) into a list
             IList<string> profilePaths = new List<string>();
@@ -135,15 +142,26 @@ namespace Backup.Start
             // check input and load profile when it is valid
             // => repeat until there is valid input
             BackupProfileConverter profileConverter = new BackupProfileConverter();
-            int input = -1;
             
-            while (input == -1)
+            while (true)
             {
-                // take input
-                bool parsed = int.TryParse(Console.ReadLine(), out input);
+                // get input
+                string input = Console.ReadLine();
+
+                // check if a dry run should make (changes will be shown but not actually be made);
+                // afterwards remove dry-flag so that the rest of the string can be parsed to a backup profile
+                bool dryRun = false;
+                if (input != null && input.Contains(" --dry"))
+                {
+                    dryRun = true;
+                    input = input.Remove(input.IndexOf(" --dry", StringComparison.CurrentCulture));
+                }
+                
+                // get profile number if provided (else the returned value will be false)
+                bool parsed = int.TryParse(input, out int selectedProfile);
                 
                 // handle exit input
-                if (parsed && input == 0)
+                if (parsed && selectedProfile == 0)
                 {
                     // repeat selection as information
                     ConsoleWriter.WriteMainMessage(Lang.SelectExit);
@@ -153,22 +171,19 @@ namespace Backup.Start
                 }
                 
                 // check non-exit input for valid selection of a backup profile
-                if (!parsed || input <= 0 || input > profilePaths.Count)
+                if (!parsed || selectedProfile <= 0 || selectedProfile > profilePaths.Count)
                 {
                     // error message because of invalid input
                     ConsoleWriter.WriteErrorMessage(Lang.InvalidNumber);
-                    
-                    // reset input on -1 for taking another loop run
-                    input = -1;
                 }
                 else
                 {
                     // valid input, return backup profile
-                    return profileConverter.LoadBackupProfile(profilePaths[input - 1]);
+                    return profileConverter.LoadBackupProfile(profilePaths[selectedProfile - 1], dryRun);
                 }
             }
 
-            // return null due to compiler checking, is never reached since the loop aboves
+            // return null due to compiler checking, is never reached since the loop above
             // repeats until there is a valid input for continuing the program
             return null;
         }

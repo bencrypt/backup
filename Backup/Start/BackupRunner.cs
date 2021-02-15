@@ -24,7 +24,8 @@ namespace Backup.Start
                 // => the return value marks if at least one file was updated (for better output to the user)
                 ConsoleWriter.WriteBackupLocationHeadline(Lang.CheckBackupLocation, backupLocation.Path);
                 bool updated = BackupDirectoryRecursively(
-                        backupLocation, backupLocation.Path, backupLocation.Destination, backupLocation.ExcludePaths);
+                        backupLocation, backupLocation.Path, backupLocation.Destination, backupLocation.ExcludePaths,
+                        profile.DryRun);
 
                 // set return flag if an file was changed and the flag is not yet set
                 if (!atLeastOneNewer && updated)
@@ -32,15 +33,24 @@ namespace Backup.Start
                     atLeastOneNewer = true;
                 }
             }
-
-            // output to the user after the backup (informs wheter there was something updated or not)
-            if (!atLeastOneNewer)
+            
+            // feedback output to user
+            if (profile.DryRun)
             {
-                ConsoleWriter.WriteSuccessMessage(Lang.SuccessNoUpdate);
+                // output to the user after a dry run
+                ConsoleWriter.WriteSuccessMessage(Lang.SuccessDryRun);
             }
             else
             {
-                ConsoleWriter.WriteSuccessMessage(Lang.SuccessUpdate);
+                // output to the user after the backup (informs whether there was something updated or not)
+                if (!atLeastOneNewer)
+                {
+                    ConsoleWriter.WriteSuccessMessage(Lang.SuccessNoUpdate);
+                }
+                else
+                {
+                    ConsoleWriter.WriteSuccessMessage(Lang.SuccessUpdate);
+                }
             }
         }
 
@@ -53,16 +63,17 @@ namespace Backup.Start
         /// <param name="srcDir">the source directory to be mirrored</param>
         /// <param name="destDir">the destination directory to contain the backup</param>
         /// <param name="excludePaths">maybe defined exclude paths which are not to consider when doing the backup</param>
+        /// <param name="dryRun">true if changes should only be shown but not actually be made</param>
         /// <returns>true when modifications, else false</returns>
         private static bool BackupDirectoryRecursively(BackupLocation backupLocation, string srcDir, string destDir,
-            IList<string> excludePaths)
+            IList<string> excludePaths, bool dryRun)
         {
             // return flag
             // => true, if at least one file or folder was updated/added/removed
             bool atLeastOneUpdated = false;
             
             // create the destination directory if it does not yet exist
-            if (!Directory.Exists(destDir))
+            if (!Directory.Exists(destDir) && !dryRun)
             {
                 Directory.CreateDirectory(destDir);
                 atLeastOneUpdated = true;
@@ -77,7 +88,7 @@ namespace Backup.Start
                     //Logger.LogInfo("Check {0}", srcFile);
                     
                     // backup
-                    bool saved = BackupFileIfNewer(backupLocation, srcFile, destDir);
+                    bool saved = BackupFileIfNewer(backupLocation, srcFile, destDir, dryRun);
 
                     // update change-flag if necessary
                     if (!atLeastOneUpdated && saved)
@@ -88,7 +99,7 @@ namespace Backup.Start
             }
             
             // remove all files and directories that are no longer contained at the source path
-            bool atLeastOneDeleted = DeleteFilesAndSubdirsNotContainedAnymore(backupLocation, srcDir, destDir);
+            bool atLeastOneDeleted = DeleteFilesAndSubdirsNotContainedAnymore(backupLocation, srcDir, destDir, dryRun);
             
             // update change-flag
             if (!atLeastOneUpdated && atLeastOneDeleted)
@@ -107,7 +118,7 @@ namespace Backup.Start
                     
                     // backup the sub directory
                     bool atLeastOneNewerInSubDir = BackupDirectoryRecursively(
-                                                        backupLocation, subDir, destOfSubDir, excludePaths);
+                                                        backupLocation, subDir, destOfSubDir, excludePaths, dryRun);
                     
                     // update change-flag if necessary
                     if (!atLeastOneUpdated && atLeastOneNewerInSubDir)
@@ -129,13 +140,14 @@ namespace Backup.Start
         /// <param name="backupLocation">the backup location for which the backup is run</param>
         /// <param name="srcFile">the source file to be mirrored</param>
         /// <param name="destDir">the destination file to contain the backup</param>
+        /// <param name="dryRun">true if changes should only be shown but not actually be made</param>
         /// <returns>true when modifications, else false</returns>
-        private static bool BackupFileIfNewer(BackupLocation backupLocation, string srcFile, string destDir)
+        private static bool BackupFileIfNewer(BackupLocation backupLocation, string srcFile, string destDir, bool dryRun)
         {
             // get the file path without the path given in the BackupLocation
             // => that shortens the path for a clearer output to the user
             string pathWithoutLocationPrefix = srcFile.Remove(0, backupLocation.Path.Length);
-            
+
             // combine the destination directory with the file name
             // => backup path for the file
             string destOfFile = Path.Combine(destDir, Path.GetFileName(srcFile));
@@ -147,8 +159,11 @@ namespace Backup.Start
                 ConsoleWriter.WriteBackupAddition(pathWithoutLocationPrefix);
 
                 // backup
-                File.Copy(srcFile, destOfFile, true);
-                
+                if (!dryRun)
+                {
+                    File.Copy(srcFile, destOfFile, true);
+                }
+
                 // return true because a new file was added
                 return true;
             }
@@ -166,7 +181,7 @@ namespace Backup.Start
                 // if the destination part already exists and is readonly, mark it as writeable so that it
                 // can be removed
                 // => e.g. needed for git-files since they are read-only
-                if (File.Exists(destOfFile))
+                if (File.Exists(destOfFile) && !dryRun)
                 {
                     FileInfo destFileInfo = new FileInfo(destOfFile);
                     if (destFileInfo.IsReadOnly)
@@ -177,8 +192,11 @@ namespace Backup.Start
                 }
                 
                 // backup
-                File.Copy(srcFile, destOfFile, true);
-                
+                if (!dryRun)
+                {
+                    File.Copy(srcFile, destOfFile, true);
+                }
+
                 // return true because newer file
                 return true;
             }
@@ -195,12 +213,22 @@ namespace Backup.Start
         /// <param name="backupLocation">the backup location for which the backup is run</param>
         /// <param name="srcDir">the source directory to be mirrored</param>
         /// <param name="destDir">the destination directory to contain the backup</param>
+        /// <param name="dryRun">true if changes should only be shown but not actually be made</param>
         /// <returns>true when modifications, else false</returns>
-        private static bool DeleteFilesAndSubdirsNotContainedAnymore(BackupLocation backupLocation, string srcDir, string destDir)
+        private static bool DeleteFilesAndSubdirsNotContainedAnymore(BackupLocation backupLocation, string srcDir, string destDir, bool dryRun)
         {
             // result flag
             // => true if at least one change had been made
             bool atLeastOneDeleted = false;
+            
+            // if a dry run is done the destination directory might not exist since it might not be created before
+            // because of the dry flag
+            // => in this case the method cannot be executed without errors since no file and sub directory can be
+            //    deleted in the destination directory when the destination directory does not exist itself
+            if (dryRun && !Directory.Exists(destDir))
+            {
+                return false;
+            }
             
             // delete all files in the destination directory which are not (any more) in the source directory
             foreach (string destFile in Directory.GetFiles(destDir))
@@ -225,15 +253,18 @@ namespace Backup.Start
                     // mark the destination file as writeable if it is readonly so that it can be removed
                     // => e.g. needed for git-files since they are read-only
                     FileInfo destFileInfo = new FileInfo(destFile);
-                    if (destFileInfo.IsReadOnly)
+                    if (destFileInfo.IsReadOnly && !dryRun)
                     {
                         new FileInfo(destFile).IsReadOnly = false;
                         //File.SetAttributes(destOfFile, FileAttributes.Normal);
                     }
                     
                     // remove file
-                    File.Delete(destFile);
-                    
+                    if (!dryRun)
+                    {
+                        File.Delete(destFile);
+                    }
+
                     // update change-flag
                     if (!atLeastOneDeleted)
                     {
@@ -264,7 +295,7 @@ namespace Backup.Start
                     
                     // delete this sub directory recursively
                     // => own method because read only attributes might be changed
-                    DeleteDirectoryRecursively(destSubDir);
+                    DeleteDirectoryRecursively(destSubDir, dryRun);
                     
                     // update change-flag
                     if (!atLeastOneDeleted)
@@ -284,34 +315,41 @@ namespace Backup.Start
         /// attribute.
         /// </summary>
         /// <param name="destDir">the directory to be deleted recursively</param>
-        private static void DeleteDirectoryRecursively(string destDir)
+        /// <param name="dryRun">true if changes should only be shown but not actually be made</param>
+        private static void DeleteDirectoryRecursively(string destDir, bool dryRun)
         {
             // set directory attributes to "normal" so that the directory can be deleted at the end
             // of the method
             DirectoryInfo directoryInfo = new DirectoryInfo(destDir);
-            if ((directoryInfo.Attributes & FileAttributes.ReadOnly) != 0)
+            if ((directoryInfo.Attributes & FileAttributes.ReadOnly) != 0 && !dryRun)
             {
                 directoryInfo.Attributes &= ~FileAttributes.ReadOnly;
             }
 
             // mark the file as writeable if it is readonly so that it can be removed
             // => e.g. needed for git-files since they are read-only
-            foreach (string file in Directory.GetFiles(destDir))
+            if (!dryRun)
             {
-                FileInfo fileInfo = new FileInfo(file);
-                fileInfo.IsReadOnly = false;
-                //File.SetAttributes(file, FileAttributes.Normal);
-                File.Delete(file);
+                foreach (string file in Directory.GetFiles(destDir))
+                {
+                    FileInfo fileInfo = new FileInfo(file);
+                    fileInfo.IsReadOnly = false;
+                    //File.SetAttributes(file, FileAttributes.Normal);
+                    File.Delete(file);
+                }
             }
-            
+
             // repeat in each sub directory recursively
             foreach (string subDir in Directory.GetDirectories(destDir))
             {
-                DeleteDirectoryRecursively(subDir);
+                DeleteDirectoryRecursively(subDir, dryRun);
             }
             
             // delete the (now empty) directory itself
-            directoryInfo.Delete();
+            if (!dryRun)
+            {
+                directoryInfo.Delete();
+            }
         }
     }
 }
