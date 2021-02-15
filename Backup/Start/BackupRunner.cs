@@ -52,6 +52,7 @@ namespace Backup.Start
                     ConsoleWriter.WriteSuccessMessage(Lang.SuccessUpdate);
                 }
             }
+            ConsoleWriter.EmptyLine();
         }
 
         /// <summary>

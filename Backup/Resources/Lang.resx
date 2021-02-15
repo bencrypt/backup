@@ -31,6 +31,9 @@
     <data name="ErrorMessage" xml:space="preserve">
         <value>Error message:</value>
     </data>
+    <data name="InvalidInput" xml:space="preserve">
+        <value>Invalid input! Please enter a valid value.</value>
+    </data>
     <data name="InvalidNumber" xml:space="preserve">
         <value>Invalid input! Please choose one of the given profiles via entering the leading number!</value>
     </data>
@@ -88,6 +91,12 @@ The 'exclude'-element of the following backup location is missing 'path' sub-ele
     <data name="DryRunInfo" xml:space="preserve">
         <value>If you add the flag '--dry' after the number (e.g. '1 --dry') the changes which would be made by the backup will only be shown but not performed.</value>
     </data>
+    <data name="BackupProfiles" xml:space="preserve">
+        <value>Backup profiles:</value>
+    </data>
+    <data name="ChosenProfile" xml:space="preserve">
+        <value>Chosen profile: </value>
+    </data>
     <data name="StartBackup" xml:space="preserve">
         <value>Start backup ...</value>
     </data>
@@ -95,16 +104,16 @@ The 'exclude'-element of the following backup location is missing 'path' sub-ele
         <value>This is a dry run so that the shown changes are NOT performed in real. Use the output to check whether the chosen backup profile works as expected.</value>
     </data>
     <data name="EndProgram" xml:space="preserve">
-        <value>To close the program please press [ENTER].</value>
+        <value>To close the application please press [RETURN].</value>
     </data>
     <data name="AnotherRun" xml:space="preserve">
-        <value>Do you want to run another backup [y/N]</value>
+        <value>Do you want to run another backup? [y/N]</value>
     </data>
     <data name="OptionCancel" xml:space="preserve">
         <value>Cancel</value>
     </data>
     <data name="SelectExit" xml:space="preserve">
-        <value>The program will not run a backup.</value>
+        <value>The application will not run a backup.</value>
     </data>
 
     <!-- backup location headline -->

@@ -63,6 +63,12 @@ namespace Backup.Resources {
             }
         }
         
+        internal static string InvalidInput {
+            get {
+                return ResourceManager.GetString("InvalidInput", resourceCulture);
+            }
+        }
+        
         internal static string InvalidNumber {
             get {
                 return ResourceManager.GetString("InvalidNumber", resourceCulture);
@@ -126,6 +132,18 @@ namespace Backup.Resources {
         internal static string DryRunInfo {
             get {
                 return ResourceManager.GetString("DryRunInfo", resourceCulture);
+            }
+        }
+        
+        internal static string BackupProfiles {
+            get {
+                return ResourceManager.GetString("BackupProfiles", resourceCulture);
+            }
+        }
+        
+        internal static string ChosenProfile {
+            get {
+                return ResourceManager.GetString("ChosenProfile", resourceCulture);
             }
         }
         

@@ -27,7 +27,7 @@ namespace Backup.Start
             string profileDir = Path.GetFullPath(Path.Combine(scriptPath, "..", "..", "backup_profiles"));
 
             // check if the backup profiles directory is existing
-            // => if not so, the program can not continue
+            // => if not so, the application can not continue
             if (!Directory.Exists(profileDir))
             {
                 // error message and exit
@@ -35,26 +35,94 @@ namespace Backup.Start
                 ExitAfterError();
             }
             
-            // choose backup profile, might be null when no one is existing or if an invalid
-            // profile is chosen
-            BackupProfile profile = SelectBackupProfile(profileDir);
-
-            // run backup if valid backup file, else prepare closing the program
-            if (profile == null)
+            // endless loop to enable multiple backup runs without restarting the program
+            // => only stops if an error occurs or if the user does not want to do another run after
+            //    a successful backup
+            bool doAnotherRun = true;
+            bool errorOccured = false;
+            
+            while (doAnotherRun)
             {
-                // invalid or not existing profile,
-                // show information for closing the program in error color
-                ExitAfterError();
+                ConsoleWriter.WriteApplicationTitle();
                 
-            } else {
+                // choose backup profile, might be null when no one is existing or if an invalid
+                // profile is chosen
+                BackupProfile profile = SelectBackupProfile(profileDir);
+
+                // stop loop because of invalid or not existing profile
+                if (profile == null)
+                {
+                    errorOccured = true;
+                    break;
+                }
                 
                 // valid profile, do backup
                 // => might exit with error when an error occurs while doing the backup
                 RunBackup(profile);
 
-                // if reached here, the backup made fully without errors
+                // if reached here, the backup is completed without errors
+                // => ask the user if another backup run should be done
+                doAnotherRun = AskForAnotherRun();
+            }
+            
+            // exit application
+            if (errorOccured)
+            {
+                ExitAfterError();
+            }
+            else
+            {
                 ExitWithoutError();
             }
+        }
+
+        /// <summary>
+        /// Asks the user if another backup run should be done. Returns true if so, else false.
+        /// </summary>
+        /// <returns>true if another run should be done, else false</returns>
+        private static bool AskForAnotherRun()
+        {
+            // value to be returned
+            // (might be changed to true due to user input while running this method)
+            bool doAnotherRun = false;
+            
+            // ask if the user wants another backup run
+            // => if not so exit, else the endless loop will take another run
+            bool validInput = false;
+            while (!validInput)
+            {
+                // valid inputs:
+                // - default empty value (given as null)
+                // - "n"/"N"
+                // - "y"/"Y"
+                ConsoleWriter.WriteMainMessage(Lang.AnotherRun);
+                string input = Console.ReadLine();
+                
+                // if not any of the valid values (see above) is given, show an error message and re-run the input loop
+                if (input != null 
+                    && !input.ToLower().Trim().Equals("") 
+                    && !input.ToLower().Trim().Equals("n") 
+                    && !input.ToLower().Trim().Equals("y"))
+                {
+                    ConsoleWriter.WriteErrorMessage(Lang.InvalidInput);
+                    continue;
+                }
+                
+                // if reached here the input is valid
+                validInput = true;
+                
+                // change return value to true if the user entered "y"/"Y"
+                if (input != null && input.ToLower().Trim().Equals("y"))
+                {
+                    doAnotherRun = true;
+                    
+                    // separate next backup on console
+                    ConsoleWriter.EmptyLine();
+                }
+            } 
+            
+            // return true if another run should be done, else false
+            return doAnotherRun;
         }
         
         /// <summary>
@@ -67,6 +135,7 @@ namespace Backup.Start
         private static void RunBackup(BackupProfile profile)
         {
             // info message
+            ConsoleWriter.EmptyLine();
             ConsoleWriter.WriteMainMessage(Lang.StartBackup);
             
             // additional info message if a dry run is executed
@@ -89,7 +158,7 @@ namespace Backup.Start
                 ConsoleWriter.WriteErrorDetails("{0}", e.Message);
 
                 // stack trace
-                ConsoleWriter.WriteErrorDetails(e.StackTrace, ConsoleColor.Yellow);
+                //ConsoleWriter.WriteErrorDetails(e.StackTrace, ConsoleColor.Yellow);
                         
                 // finish program
                 ExitAfterError();
@@ -109,6 +178,8 @@ namespace Backup.Start
             // print starting message
             ConsoleWriter.WriteMainMessage(Lang.Start);
             ConsoleWriter.WriteMainMessage(Lang.DryRunInfo);
+            ConsoleWriter.EmptyLine();
+            ConsoleWriter.WriteMainMessage(Lang.BackupProfiles);
 
             // save all profile paths (xmls in profile directory) into a list
             IList<string> profilePaths = new List<string>();
@@ -137,7 +208,6 @@ namespace Backup.Start
             
             // add option to close the program without running a backup
             ConsoleWriter.WriteMainMessage("[0]: {0}", Lang.OptionCancel);
-            
 
             // check input and load profile when it is valid
             // => repeat until there is valid input
@@ -146,6 +216,8 @@ namespace Backup.Start
             while (true)
             {
                 // get input
+                ConsoleWriter.EmptyLine();
+                ConsoleWriter.WriteMainMessage(Lang.ChosenProfile);
                 string input = Console.ReadLine();
 
                 // check if a dry run should make (changes will be shown but not actually be made);
@@ -182,10 +254,6 @@ namespace Backup.Start
                     return profileConverter.LoadBackupProfile(profilePaths[selectedProfile - 1], dryRun);
                 }
             }
-
-            // return null due to compiler checking, is never reached since the loop above
-            // repeats until there is a valid input for continuing the program
-            return null;
         }
 
         /// <summary>
