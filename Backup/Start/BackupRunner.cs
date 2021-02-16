@@ -20,12 +20,23 @@ namespace Backup.Start
             bool atLeastOneNewer = false;
             foreach (BackupLocation backupLocation in profile.BackupLocations)
             {
-                // backup each directory recursively
-                // => the return value marks if at least one file was updated (for better output to the user)
+                // show the backup location path as feedback to the user
                 ConsoleWriter.WriteBackupLocationHeadline(Lang.CheckBackupLocation, backupLocation.Path);
-                bool updated = BackupDirectoryRecursively(
-                        backupLocation, backupLocation.Path, backupLocation.Destination, backupLocation.ExcludePaths,
-                        profile.DryRun);
+
+                // do backup
+                bool updated = false;
+                if (File.Exists(backupLocation.Path))
+                {
+                    updated = BackupFileBackupLocation(backupLocation, backupLocation.Path, backupLocation.Destination, profile.DryRun);
+                }
+                else if (Directory.Exists(backupLocation.Path))
+                {
+                    // backup path is a directory, so backup this directory recursively
+                    // => the return value marks if at least one file was updated (for better output to the user)
+                    updated = BackupDirectoryRecursively(
+                                    backupLocation, backupLocation.Path, backupLocation.Destination, 
+                                    backupLocation.ExcludePaths, profile.DryRun);
+                }
 
                 // set return flag if an file was changed and the flag is not yet set
                 if (!atLeastOneNewer && updated)
@@ -53,6 +64,82 @@ namespace Backup.Start
                 }
             }
             ConsoleWriter.EmptyLine();
+        }
+
+        /// <summary>
+        /// Backups the given source file into the given destination directory.
+        /// This method is to be used only for files which are given as src attribute inside backup profiles.
+        /// Returns true if the file was created or modified, else false.
+        /// </summary>
+        /// <param name="backupLocation">the backup location for which the backup is run</param>
+        /// <param name="srcFile">the source file to be backed up</param>
+        /// <param name="destDir">the destination directory to contain the backup</param>
+        /// <param name="dryRun">true if changes should only be shown but not actually be made</param>
+        /// <returns>true if the file was created or modified, else false</returns>
+        private static bool BackupFileBackupLocation(BackupLocation backupLocation, string srcFile, string destDir, bool dryRun)
+        {
+            // create the destination directory if it does not yet exist
+            // => is not yet created because the backup location is a file and not a directory
+            if (!Directory.Exists(destDir) && !dryRun)
+            {
+                Directory.CreateDirectory(backupLocation.Destination);
+            }
+                    
+            // combine the destination directory with the file name
+            // => backup path for the file
+            string destOfFile = Path.Combine(destDir, Path.GetFileName(srcFile));
+            
+            // backup the file if not existing yet
+            if (!File.Exists(destOfFile))
+            {
+                // output to user
+                ConsoleWriter.WriteBackupAddition(srcFile);
+
+                // backup
+                if (!dryRun)
+                {
+                    File.Copy(srcFile, destOfFile, true);
+                }
+
+                // return true because a new file was added
+                return true;
+            }
+            
+            // backup the file if newer on source path than in destination path
+            if (File.GetLastWriteTime(srcFile) > File.GetLastWriteTime(destOfFile))
+            {
+                // control message
+                //Logger.LogInfo("Backup: {0} => {1}", srcFile, destOfFile);
+                
+                // user output, show only the part of the source path after the BackupLocation-path for
+                // a clearer output
+                ConsoleWriter.WriteBackupUpdate(srcFile);
+                
+                // if the destination part already exists and is readonly, mark it as writeable so that it
+                // can be removed
+                // => e.g. needed for git-files since they are read-only
+                if (File.Exists(destOfFile) && !dryRun)
+                {
+                    FileInfo destFileInfo = new FileInfo(destOfFile);
+                    if (destFileInfo.IsReadOnly)
+                    {
+                        new FileInfo(destOfFile).IsReadOnly = false;
+                        //File.SetAttributes(destOfFile, FileAttributes.Normal);
+                    }
+                }
+                
+                // backup
+                if (!dryRun)
+                {
+                    File.Copy(srcFile, destOfFile, true);
+                }
+
+                // return true because newer file
+                return true;
+            }
+
+            // false because no newer file
+            return false;
         }
 
         /// <summary>

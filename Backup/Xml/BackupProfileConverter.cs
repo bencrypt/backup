@@ -136,7 +136,8 @@ namespace Backup.Xml
             IList<string> errorMessages = new List<string>();
             
             // check source path
-            bool validSrc = xmlLoc.Element("src") != null && Directory.Exists(xmlLoc.Element("src")?.Value);
+            bool validSrc = xmlLoc.Element("src") != null && (Directory.Exists(xmlLoc.Element("src")?.Value) 
+                                                              || File.Exists(xmlLoc.Element("src")?.Value));
 
             // add messages for invalid src and dest path into result collection if needed
             if (!validSrc)
