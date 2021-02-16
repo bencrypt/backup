@@ -23,6 +23,22 @@ namespace Backup.Utils
         }
         
         /*
+         * SPECIAL LINES
+         */
+        
+        public static void WriteApplicationTitle()
+        {
+            WriteLineWithColor("----------------", OutputColors.MainMessages);
+            WriteLineWithColor("---- BACKUP ----", OutputColors.MainMessages);
+            WriteLineWithColor("----------------", OutputColors.MainMessages);
+        }
+        
+        public static void EmptyLine()
+        {
+            Console.WriteLine();
+        }
+        
+        /*
          * ERROR MESSAGES
          */
 

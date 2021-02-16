@@ -31,6 +31,9 @@
     <data name="ErrorMessage" xml:space="preserve">
         <value>Fehlermeldung:</value>
     </data>
+    <data name="InvalidInput" xml:space="preserve">
+        <value>Ungültige Eingabe! Bitte geben Sie einen gültigen Wert ein.</value>
+    </data>
     <data name="InvalidNumber" xml:space="preserve">
         <value>Ungültige Eingabe! Bitte eine der angegebenen Profile durch Eingabe der vorangestellten Nummer wählen!</value>
     </data>
@@ -83,16 +86,28 @@ Das 'exclude'-Element der folgenden Backup Location hat keine 'path'-Sub-Element
 
     <!-- start and end -->
     <data name="Start" xml:space="preserve">
-        <value>Willkommen beim Backup! Bitte die Zahl des auszuführenden Backup-Profils eingeben:</value>
+        <value>Willkommen beim Backup! Bitte geben Sie die Zahl des auszuführenden Backup-Profils ein.</value>
+    </data>
+    <data name="DryRunInfo" xml:space="preserve">
+        <value>Wenn das Flag '--dry' nach der Zahl eingefügt wird (z.B. '1 --dry'), werden die Änderungen, die von dem Backup durchgeführt werden sollen, nur angezeigt und nicht tatsächlich vorgenommen.</value>
+    </data>
+    <data name="BackupProfiles" xml:space="preserve">
+        <value>Backup-Profile:</value>
+    </data>
+    <data name="ChosenProfile" xml:space="preserve">
+        <value>Ausgewähltes Profil: </value>
     </data>
     <data name="StartBackup" xml:space="preserve">
         <value>Starte Backup ...</value>
+    </data>
+    <data name="DoDryRun" xml:space="preserve">
+        <value>Dies ist ein Probelauf (gesetztes '--dry'-Flag), bei dem die angezeigten Änderungen NICHT durchgeführt werden. Die Ausgabe kann verwendet werden, um sicherzustellen, dass das ausgewählte Backup-Profil wie erwartet funktioniert.</value>
     </data>
     <data name="EndProgram" xml:space="preserve">
         <value>Zum Beenden des Programms bitte [ENTER] drücken.</value>
     </data>
     <data name="AnotherRun" xml:space="preserve">
-        <value>Soll noch ein weiteres Backup durchgeführt werden? [j/N]</value>
+        <value>Soll noch ein weiteres Backup durchgeführt werden? [y/N]</value>
     </data>
     <data name="OptionCancel" xml:space="preserve">
         <value>Abbrechen</value>
@@ -112,6 +127,9 @@ Das 'exclude'-Element der folgenden Backup Location hat keine 'path'-Sub-Element
     </data>
     <data name="SuccessUpdate" xml:space="preserve">
         <value>Backup durchgeführt! Alle Dateien wurden auf den aktuellen Stand gebracht.</value>
+    </data>
+    <data name="SuccessDryRun" xml:space="preserve">
+        <value>Probelauf durchgeführt! Die oben aufgeführten Änderungen (falls vorhanden) sind rein visuell. Es wurde aufgrund des Probelaufs keine der Änderungen tatsächlich durchgeführt.</value>
     </data>
 
 </root>

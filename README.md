@@ -2,7 +2,8 @@
 
 ## Introduction
 
-This console application lets the user backup directories via mirroring them to another path.
+This console application lets the user backup directories and files. 
+Source directories will be mirrored to the destination path and files will be copied into the directory given as destination.
 The destination directory might be located on another connected device.
 
 ## Screenshot
@@ -36,7 +37,11 @@ Thus in the example structure above the user could choose between the profiles '
 
 The following file shows an example configuration. 
 There can be added multiple _backup\_location_ entries if required. 
-Each of those entries defines the backup of one single directory.
+Each of those entries defines the backup of one single directory or one single file which is given in the _\<src\>_-attribute.
+The destination path (_\<dest\>_-attribute) is the directory which will be the mirror of the source directory or which will contain the source file.
+Thus, in the case of files you can store multiple files located in different source directories at the same destination.
+When using directories as source path, however, an exactly mirror will be created at the destination path.
+
 It is also possible to add multiple _path_ entries inside the _exclude_ element. 
 If no path should be excluded, the whole _exclude_ entry has to be omitted.
 
@@ -55,6 +60,8 @@ If no path should be excluded, the whole _exclude_ entry has to be omitted.
 
 In this example the directory _/home/user/to_backup_ is backed up to _/media/user/device/is\_backup_. The sub directory _do\_not\_backup_
 however is not copied during the backup because it is marked as an excluded path.
+
+**Attention:** Even if _to\_backup_ is a file it is saved as _is\_backup/to\_backup_ which means that _is\_backup_ is always interpreted as a directory.
 
 ### Wildcards
 
@@ -103,9 +110,20 @@ Note that an object of the type `BackupLocation` corresponds to a directory that
 4. Create one or more backup profiles (.xml files, structure see in chapter 'Configuration')
 5. Start the application (Linux: Backup, Windows: Backup.exe)
 6. Choose one of the backup profiles (the number displayed inside the square brackets 
-   (e.g. press _1_ and _Return_ afterwards for selecting the profile with the prefix '\[1\]'))
+   (e.g. enter _1_ and then press _Return_ for selecting the profile with the prefix '\[1\]'))
 
-**Attention:** 
-The backup run will exactly create a copy of the source directory at the destination path.
+### Attention:
+If giving a directory path as the source for the backup, the application will exactly create a copy of this source directory at the destination path.
 This includes deleting files at the destination that are not longer saved at the source.
-Thus take care when defining and running backup profiles.
+Thus, take care when defining and running backup profiles. Dry runs might help you to analyze how the application handles your specific backup profiles.
+
+### Dry runs:
+
+You can use the flag '--dry' (e.g. enter _1 --dry_, then press _Return_) to get displayed all the changes that would be made by the chosen backup profile without actually performing any of this changes.
+This is a good way to check what changes will be made by running a backup profile before using it to backup real data.
+
+### Multiple runs:
+
+You can do multiple backup runs without needing to restart the application each time.
+Therefore the application asks you whether you want to start another run after one backup has successfully finished.
+This request will not be made if the backup finishes with an error.

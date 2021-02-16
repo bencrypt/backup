@@ -20,8 +20,9 @@ namespace Backup.Xml
         /// Returns the converted BackupProfile or null if an error occured.
         /// </summary>
         /// <param name="path">a valid path for a backup profile</param>
+        /// <param name="dryRun">true if changes should only be shown but not actually be made</param>
         /// <returns>a valid backup profile or null</returns>
-        public BackupProfile LoadBackupProfile(string path)
+        public BackupProfile LoadBackupProfile(string path, bool dryRun)
         {
             /*
              * load XML
@@ -57,7 +58,7 @@ namespace Backup.Xml
             {
                 // create a BackupProfile from the BackupLocations
                 string name = Path.GetFileNameWithoutExtension(path);
-                BackupProfile profile = new BackupProfile(name, xmlLocs);
+                BackupProfile profile = new BackupProfile(name, xmlLocs, dryRun);
                 
                 // control message
                 //Logger.LogInfo(profile.ToString());
@@ -135,7 +136,8 @@ namespace Backup.Xml
             IList<string> errorMessages = new List<string>();
             
             // check source path
-            bool validSrc = xmlLoc.Element("src") != null && Directory.Exists(xmlLoc.Element("src")?.Value);
+            bool validSrc = xmlLoc.Element("src") != null && (Directory.Exists(xmlLoc.Element("src")?.Value) 
+                                                              || File.Exists(xmlLoc.Element("src")?.Value));
 
             // add messages for invalid src and dest path into result collection if needed
             if (!validSrc)

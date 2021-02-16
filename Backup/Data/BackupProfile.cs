@@ -10,17 +10,19 @@ namespace Backup
          *==                   FIELDS                     ==*
          *==================================================*/
         
-        public string Name { get; private set; }
-        public IList<BackupLocation> BackupLocations { get; private set; }
+        private string Name { get; }
+        public IList<BackupLocation> BackupLocations { get; }
+        public bool DryRun { get; }
 
         /*==================================================*
          *==                CONSTRUCTORS                  ==*
          *==================================================*/
         
-        public BackupProfile(string name, IList<BackupLocation> backupLocations)
+        public BackupProfile(string name, IList<BackupLocation> backupLocations, bool dryRun)
         {
             Name = name;
             BackupLocations = backupLocations;
+            DryRun = dryRun;
         }
         
         /*==================================================*
