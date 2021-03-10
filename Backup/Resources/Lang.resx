@@ -74,6 +74,12 @@ The 'src'-path of the following backup location is missing or invalid:
 {0}
         </value>
     </data>
+    <data name="ErrorXmlDest" xml:space="preserve">
+        <value>
+The 'dest'-path of the following backup location is missing:
+{0}
+        </value>
+    </data>
     <data name="ErrorXmlExcludeMissingPaths" xml:space="preserve">
         <value>
 The 'exclude'-element of the following backup location is missing 'path' sub-elements:

@@ -10,7 +10,7 @@ namespace Backup.Utils
         /// <param name="filePath">the file path to check</param>
         /// <param name="excludePaths">all exclude paths of the current used backup profile</param>
         /// <returns>true if the file should be excluded, else false</returns>
-        public static bool ShouldFileBeExcluded(string filePath, IList<string> excludePaths)
+        public bool ShouldFileBeExcluded(string filePath, IList<string> excludePaths)
         {
             // full path is listed in exclude paths
             if (excludePaths.Contains(filePath))
@@ -19,7 +19,7 @@ namespace Backup.Utils
             }
             
             // file extension is listed in exclude paths
-            if (ExcludeUtil.ContainsExcludedFileExtension(filePath, excludePaths))
+            if (ContainsExcludedFileExtension(filePath, excludePaths))
             {
                 return true;
             }
@@ -34,7 +34,7 @@ namespace Backup.Utils
         /// <param name="filePath">the file path to check</param>
         /// <param name="excludePaths">all exclude paths (path entries like "*.extension" is checked here)</param>
         /// <returns>true if the file should be excluded, else false</returns>
-        private static bool ContainsExcludedFileExtension(string filePath, IList<string> excludePaths)
+        private bool ContainsExcludedFileExtension(string filePath, IList<string> excludePaths)
         {
             // go through each exclude path definition
             foreach (string excludePath in excludePaths)
@@ -58,7 +58,7 @@ namespace Backup.Utils
         /// <param name="dirPath">the directory path to check</param>
         /// <param name="excludePaths">all exclude paths of the current used backup profile</param>
         /// <returns>true if the directory should be excluded, else false</returns>
-        public static bool ShouldDirectoryBeExcluded(string dirPath, IList<string> excludePaths)
+        public bool ShouldDirectoryBeExcluded(string dirPath, IList<string> excludePaths)
         {
             // full path is listed in exclude paths
             if (excludePaths.Contains(dirPath))
@@ -67,7 +67,7 @@ namespace Backup.Utils
             }
 
             // directory is listed via wildcard in exclude paths
-            if (ExcludeUtil.ContainsExcludedDirectoryWildcard(dirPath, excludePaths))
+            if (ContainsExcludedDirectoryWildcard(dirPath, excludePaths))
             {
                 return true;
             }
@@ -82,7 +82,7 @@ namespace Backup.Utils
         /// <param name="dirPath">the directory path to check</param>
         /// <param name="excludePaths">all exclude paths (path entries like "*/dir/*" is checked here)</param>
         /// <returns>true if the directory should be excluded, else false</returns>
-        private static bool ContainsExcludedDirectoryWildcard(string dirPath, IList<string> excludePaths)
+        private bool ContainsExcludedDirectoryWildcard(string dirPath, IList<string> excludePaths)
         {
             //Logger.LogInfo("Check dir: {0}", dirPath);
             

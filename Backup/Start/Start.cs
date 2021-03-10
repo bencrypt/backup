@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
+using Backup.Data;
 using Backup.Resources;
 using Backup.Utils;
 using Backup.Xml;
@@ -10,8 +8,9 @@ namespace Backup.Start
 {
     class Start
     {
+
         // ATTENTION: Use ConsoleWriter instead of Console.WriteLine to use Colors
-        
+
         /// <summary>
         /// Starts the backup program initiating all required actions like profile choosing, parsing and running
         /// the backup.
@@ -22,65 +21,92 @@ namespace Backup.Start
             // change to English for testing
             //Thread.CurrentThread.CurrentUICulture = CultureInfo.GetCultureInfo("en");
 
-            // get path of backup profiles, seen from the .exe or .sh in "../backup_profiles"
-            string scriptPath = Path.GetFullPath(Assembly.GetExecutingAssembly().Location);
-            string profileDir = Path.GetFullPath(Path.Combine(scriptPath, "..", "..", "backup_profiles"));
-
-            // check if the backup profiles directory is existing
-            // => if not so, the application can not continue
-            if (!Directory.Exists(profileDir))
+            try
             {
-                // error message and exit
-                ConsoleWriter.WriteErrorMessage(Lang.ErrorNotExistingProfileDir, profileDir);
-                ExitAfterError();
+                // init profile selector (might throw BackupException if "../backup_profiles" does not exist)
+                BackupProfileSelector profileSelector = new BackupProfileSelector();
+                profileSelector.InitProfilePaths();
+
+                // create necessary instances
+                BackupProfileConverter profileConverter = new BackupProfileConverter();
+                ExcludeUtil excludeUtil = new ExcludeUtil();
+
+                // execute main loop (might forward BackupException if the backup cannot be processed)
+                Start starter = new Start();
+                starter.DoMainLoop(profileSelector, profileConverter, excludeUtil);
             }
-            
+            catch (BackupException e)
+            {
+                // all BackupExceptions are forwarded here to provide a single exit point when an error occurs
+                ExitUtil.ExitAfterError(e);
+            }
+
+            // backup was successful or regularly cancelled by user, so exit the application in the default way
+            ExitUtil.ExitWithoutError();
+        }
+        
+        /// <summary>
+        /// The main loop executes the following steps:<br />
+        /// 1. Print start message, explain usage of application<br />
+        /// 2. Let the user select a profile<br />
+        /// 3. Do a backup according to the selected profile<br />
+        /// 4. Ask if another backup run should be started<br />
+        /// 5. Exit or repeat from step 1<br />
+        /// <br />
+        /// If an error occurs while executing the main loop, a BackupException will be thrown by the sub methods
+        /// and is forwarded to the Main method for unifying the exit points of the application.
+        /// </summary>
+        /// <param name="profileSelector">an instance for selecting a backup profile</param>
+        /// <param name="profileConverter">an instance for converting a backup profile from a xml file to an internal representation</param>
+        /// <param name="excludeUtil">an instance for checking paths which should be excluded by the backup</param>
+        private void DoMainLoop(BackupProfileSelector profileSelector, BackupProfileConverter profileConverter, ExcludeUtil excludeUtil) {
+
             // endless loop to enable multiple backup runs without restarting the program
-            // => only stops if an error occurs or if the user does not want to do another run after
-            //    a successful backup
+            // => only stops if an error occurs or if the user does not want to do another run
             bool doAnotherRun = true;
-            bool errorOccured = false;
-            
+
             while (doAnotherRun)
             {
+                // starting message to explain the usage of the application
                 ConsoleWriter.WriteApplicationTitle();
-                
-                // choose backup profile, might be null when no one is existing or if an invalid
-                // profile is chosen
-                BackupProfile profile = SelectBackupProfile(profileDir);
+                PrintStartingMessage();
 
-                // stop loop because of invalid or not existing profile
-                if (profile == null)
+                // let the user select a backup profile or cancel the application
+                string profilePath = profileSelector.SelectBackupProfile();
+                if (profilePath == null)
                 {
-                    errorOccured = true;
                     break;
                 }
                 
-                // valid profile, do backup
-                // => might exit with error when an error occurs while doing the backup
-                RunBackup(profile);
+                // load selected profile (might throw BackupException if invalid)
+                BackupProfile profile = profileConverter.LoadBackupProfile(profilePath, profileSelector.IsDryRunSelected);
+                
+                // valid profile, do backup (might throw BackupException)
+                BackupRunner backupRunner = new BackupRunner(profile, excludeUtil);
+                backupRunner.RunBackup();
 
                 // if reached here, the backup is completed without errors
                 // => ask the user if another backup run should be done
                 doAnotherRun = AskForAnotherRun();
             }
-            
-            // exit application
-            if (errorOccured)
-            {
-                ExitAfterError();
-            }
-            else
-            {
-                ExitWithoutError();
-            }
+        }
+        
+        /// <summary>
+        /// Prints a start message for the user.
+        /// </summary>
+        private void PrintStartingMessage()
+        {
+            ConsoleWriter.WriteMainMessage(Lang.Start);
+            ConsoleWriter.WriteMainMessage(Lang.DryRunInfo);
+            ConsoleWriter.EmptyLine();
+            ConsoleWriter.WriteMainMessage(Lang.BackupProfiles);
         }
 
         /// <summary>
         /// Asks the user if another backup run should be done. Returns true if so, else false.
         /// </summary>
         /// <returns>true if another run should be done, else false</returns>
-        private static bool AskForAnotherRun()
+        private bool AskForAnotherRun()
         {
             // value to be returned
             // (might be changed to true due to user input while running this method)
@@ -124,165 +150,5 @@ namespace Backup.Start
             // return true if another run should be done, else false
             return doAnotherRun;
         }
-        
-        /// <summary>
-        /// Runs the backup basing on the given profile. The profile should be validated since this method does
-        /// rely on it.
-        /// If an error occurs while doing the backup, the backup will stop right there and an error message
-        /// will be printed.
-        /// </summary>
-        /// <param name="profile">a valid backup profile</param>
-        private static void RunBackup(BackupProfile profile)
-        {
-            // info message
-            ConsoleWriter.EmptyLine();
-            ConsoleWriter.WriteMainMessage(Lang.StartBackup);
-            
-            // additional info message if a dry run is executed
-            if (profile.DryRun)
-            {
-                ConsoleWriter.WriteMainMessage(Lang.DoDryRun);
-            }
-                    
-            // do backup, might have errors (due to permissions etc.) that are
-            // printed out directly when occuring and cause the backup process to stop at the error's point
-            try
-            {
-                BackupRunner.RunBackup(profile);
-            }
-            catch (Exception e)
-            {
-                // error message
-                ConsoleWriter.WriteErrorMessage(Lang.StopBecauseOfError);
-                ConsoleWriter.WriteErrorMessage(Lang.ErrorMessage);
-                ConsoleWriter.WriteErrorDetails("{0}", e.Message);
-
-                // stack trace
-                //ConsoleWriter.WriteErrorDetails(e.StackTrace, ConsoleColor.Yellow);
-                        
-                // finish program
-                ExitAfterError();
-            }
-        }
-
-        /// <summary>
-        /// Makes the user select interactively a backup profile from the profiles available in the given
-        /// directory. Returns the parsed backup profile if it is valid, else null.
-        /// Does or delegates all the checks needed for verifying that the selected profile is valid, like
-        /// validating the file paths.
-        /// </summary>
-        /// <param name="profileDir">the directory with the profiles</param>
-        /// <returns>a valid backup profile or null (when error)</returns>
-        private static BackupProfile SelectBackupProfile(string profileDir)
-        {
-            // print starting message
-            ConsoleWriter.WriteMainMessage(Lang.Start);
-            ConsoleWriter.WriteMainMessage(Lang.DryRunInfo);
-            ConsoleWriter.EmptyLine();
-            ConsoleWriter.WriteMainMessage(Lang.BackupProfiles);
-
-            // save all profile paths (xmls in profile directory) into a list
-            IList<string> profilePaths = new List<string>();
-            foreach (string profile in Directory.GetFiles(profileDir))
-            {
-                if (profile.EndsWith(".xml"))
-                {
-                    profilePaths.Add(profile);
-                }
-            }
-            
-            // check if there are profiles to select
-            // => if not so inform the user and return null
-            if (profilePaths.Count == 0)
-            {
-                ConsoleWriter.WriteErrorMessage(Lang.NoProfileAtPath, profileDir);
-                ConsoleWriter.WriteErrorDetails(Lang.NoProfileAtPathHelp);
-                return null;
-            }
-            
-            // make all profile paths selectable by the user through entering a corresponding number
-            for (int option = 1; option <= profilePaths.Count; option++)
-            {
-                ConsoleWriter.WriteMainMessage("[{0}]: {1}", option, Path.GetFileNameWithoutExtension(profilePaths[option-1]));
-            }
-            
-            // add option to close the program without running a backup
-            ConsoleWriter.WriteMainMessage("[0]: {0}", Lang.OptionCancel);
-
-            // check input and load profile when it is valid
-            // => repeat until there is valid input
-            BackupProfileConverter profileConverter = new BackupProfileConverter();
-            
-            while (true)
-            {
-                // get input
-                ConsoleWriter.EmptyLine();
-                ConsoleWriter.WriteMainMessage(Lang.ChosenProfile);
-                string input = Console.ReadLine();
-
-                // check if a dry run should make (changes will be shown but not actually be made);
-                // afterwards remove dry-flag so that the rest of the string can be parsed to a backup profile
-                bool dryRun = false;
-                if (input != null && input.Contains(" --dry"))
-                {
-                    dryRun = true;
-                    input = input.Remove(input.IndexOf(" --dry", StringComparison.CurrentCulture));
-                }
-                
-                // get profile number if provided (else the returned value will be false)
-                bool parsed = int.TryParse(input, out int selectedProfile);
-                
-                // handle exit input
-                if (parsed && selectedProfile == 0)
-                {
-                    // repeat selection as information
-                    ConsoleWriter.WriteMainMessage(Lang.SelectExit);
-                    
-                    // close
-                    ExitWithoutError();
-                }
-                
-                // check non-exit input for valid selection of a backup profile
-                if (!parsed || selectedProfile <= 0 || selectedProfile > profilePaths.Count)
-                {
-                    // error message because of invalid input
-                    ConsoleWriter.WriteErrorMessage(Lang.InvalidNumber);
-                }
-                else
-                {
-                    // valid input, return backup profile
-                    return profileConverter.LoadBackupProfile(profilePaths[selectedProfile - 1], dryRun);
-                }
-            }
-        }
-
-        /// <summary>
-        /// Prints an exit message in an error color and waits for ENTER before closing the program so that
-        /// the window does not close immediately.
-        /// </summary>
-        private static void ExitAfterError()
-        {
-            // exit message with error color
-            ConsoleWriter.WriteErrorMessage(Lang.EndProgram);
-                    
-            // wait for input until actual closing
-            Console.ReadLine();
-            Environment.Exit(0);
-        }
-        
-        /// <summary>
-        /// Prints an exit message in an non-error color and waits for ENTER before closing the program so that
-        /// the window does not close immediately.
-        /// </summary>
-        private static void ExitWithoutError()
-        {
-            // exit message with non-error color
-            ConsoleWriter.WriteMainMessage(Lang.EndProgram);
-                    
-            // wait for input until actual closing
-            Console.ReadLine();
-            Environment.Exit(0);
-        }
-
     }
 }

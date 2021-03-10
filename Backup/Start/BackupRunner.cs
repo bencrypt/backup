@@ -1,5 +1,7 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.IO;
+using Backup.Data;
 using Backup.Resources;
 using Backup.Utils;
 
@@ -7,14 +9,66 @@ namespace Backup.Start
 {
     public class BackupRunner
     {
+        private readonly BackupProfile _profile;
+        private readonly ExcludeUtil _excludeUtil;
+        
+        /// <summary>
+        /// Creates an instance of BackupRunner which is responsible for doing the actual backup defined by the
+        /// given profile.
+        /// The profile should be validated since the BackupRunner does rely on it.
+        /// </summary>
+        /// <param name="profile">a valid backup profile</param>
+        /// <param name="excludeUtil">an instance for checking paths which should be excluded by the backup</param>
+        public BackupRunner(BackupProfile profile, ExcludeUtil excludeUtil)
+        {
+            _profile = profile;
+            _excludeUtil = excludeUtil;
+        }
+        
+        /// <summary>
+        /// Runs the backup basing on the profile applied to the current BackupRunner instance.
+        /// <br />
+        /// If an error occurs while doing the backup, the backup will stop right there and throws a BackupException
+        /// that is forwarded to the main method for unifying the exit points of the application
+        /// </summary>
+        /// <exception cref="BackupException">thrown if the backup cannot be done successfully</exception>
+        public void RunBackup()
+        {
+            // info message
+            ConsoleWriter.EmptyLine();
+            ConsoleWriter.WriteMainMessage(Lang.StartBackup);
+            
+            // additional info message if a dry run is executed
+            if (_profile.DryRun)
+            {
+                ConsoleWriter.WriteMainMessage(Lang.DoDryRun);
+            }
+                    
+            // do backup, might have errors (due to permissions etc.) that are
+            // printed out directly when occuring and cause the backup process to stop at the error's point
+            try
+            {
+                DoBackup(_profile);
+            }
+            catch (Exception e)
+            {
+                // stack trace
+                //ConsoleWriter.WriteErrorDetails(e.StackTrace, ConsoleColor.Yellow);
+                
+                // throw BackupException for getting handled by start class
+                IList<string> errorMessage = new List<string>() { Lang.StopBecauseOfError, Lang.ErrorMessage };
+                throw new BackupException(errorMessage, e.Message);
+            }
+        }
+        
         /// <summary>
         /// Initiates the actual backup specified by the given backup profile. This includes adding new files/dirs,
         /// updating existing but newer files, removing not (anymore) existing files and directories.
-        /// Writes on the console when the backup has finished successfully. Might throw errors which needs to be
+        /// Writes on the console when the backup has finished successfully. Might throw exceptions which needs to be
         /// captured from the caller of this method.
         /// </summary>
         /// <param name="profile">the backup profile to run</param>
-        public static void RunBackup(BackupProfile profile)
+        private void DoBackup(BackupProfile profile)
         {
             // go through all BackupLocations in the BackupProfile to backup them
             bool atLeastOneNewer = false;
@@ -76,7 +130,7 @@ namespace Backup.Start
         /// <param name="destDir">the destination directory to contain the backup</param>
         /// <param name="dryRun">true if changes should only be shown but not actually be made</param>
         /// <returns>true if the file was created or modified, else false</returns>
-        private static bool BackupFileBackupLocation(BackupLocation backupLocation, string srcFile, string destDir, bool dryRun)
+        private bool BackupFileBackupLocation(BackupLocation backupLocation, string srcFile, string destDir, bool dryRun)
         {
             // create the destination directory if it does not yet exist
             // => is not yet created because the backup location is a file and not a directory
@@ -153,7 +207,7 @@ namespace Backup.Start
         /// <param name="excludePaths">maybe defined exclude paths which are not to consider when doing the backup</param>
         /// <param name="dryRun">true if changes should only be shown but not actually be made</param>
         /// <returns>true when modifications, else false</returns>
-        private static bool BackupDirectoryRecursively(BackupLocation backupLocation, string srcDir, string destDir,
+        private bool BackupDirectoryRecursively(BackupLocation backupLocation, string srcDir, string destDir,
             IList<string> excludePaths, bool dryRun)
         {
             // return flag
@@ -170,7 +224,7 @@ namespace Backup.Start
             // backup all newer files from the source to the destination path if not excluded
             foreach (string srcFile in Directory.GetFiles(srcDir))
             {
-                if (!ExcludeUtil.ShouldFileBeExcluded(srcFile, excludePaths))
+                if (!_excludeUtil.ShouldFileBeExcluded(srcFile, excludePaths))
                 {
                     // control message
                     //Logger.LogInfo("Check {0}", srcFile);
@@ -198,7 +252,7 @@ namespace Backup.Start
             // repeat backup at all sub directories if not excluded
             foreach (string subDir in Directory.GetDirectories(srcDir))
             {
-                if (!ExcludeUtil.ShouldDirectoryBeExcluded(subDir, excludePaths))
+                if (!_excludeUtil.ShouldDirectoryBeExcluded(subDir, excludePaths))
                 {
                     // combine destination path with sub directory name (must be got as file name!)
                     // => backup path for sub folder
@@ -230,7 +284,7 @@ namespace Backup.Start
         /// <param name="destDir">the destination file to contain the backup</param>
         /// <param name="dryRun">true if changes should only be shown but not actually be made</param>
         /// <returns>true when modifications, else false</returns>
-        private static bool BackupFileIfNewer(BackupLocation backupLocation, string srcFile, string destDir, bool dryRun)
+        private bool BackupFileIfNewer(BackupLocation backupLocation, string srcFile, string destDir, bool dryRun)
         {
             // get the file path without the path given in the BackupLocation
             // => that shortens the path for a clearer output to the user
@@ -303,7 +357,7 @@ namespace Backup.Start
         /// <param name="destDir">the destination directory to contain the backup</param>
         /// <param name="dryRun">true if changes should only be shown but not actually be made</param>
         /// <returns>true when modifications, else false</returns>
-        private static bool DeleteFilesAndSubdirsNotContainedAnymore(BackupLocation backupLocation, string srcDir, string destDir, bool dryRun)
+        private bool DeleteFilesAndSubdirsNotContainedAnymore(BackupLocation backupLocation, string srcDir, string destDir, bool dryRun)
         {
             // result flag
             // => true if at least one change had been made
@@ -404,7 +458,7 @@ namespace Backup.Start
         /// </summary>
         /// <param name="destDir">the directory to be deleted recursively</param>
         /// <param name="dryRun">true if changes should only be shown but not actually be made</param>
-        private static void DeleteDirectoryRecursively(string destDir, bool dryRun)
+        private void DeleteDirectoryRecursively(string destDir, bool dryRun)
         {
             // set directory attributes to "normal" so that the directory can be deleted at the end
             // of the method
